@@ -1,0 +1,18 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // 1. GLOBAL LOCK
+    // Deny read/write access to the root level to prevent pollution.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // 2. APP SCOPE (The Single Backend Law)
+    // Only allow authenticated users to access data within the specific app namespace.
+    // This isolates '2h_web_solutions_google_ads_asssitant_v1' from other apps in the shared project.
+    match /apps/{appId}/{document=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}
