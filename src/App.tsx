@@ -5,6 +5,7 @@ import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import Clients from './pages/Clients';
 import ClientDetails from './pages/ClientDetails';
+import CampaignWorkspace from './pages/CampaignWorkspace';
 import Tasks from './pages/Tasks';
 
 // Login Component
@@ -36,6 +37,7 @@ function App() {
           <Route index element={<Dashboard />} />
           <Route path="clients" element={<Clients />} />
           <Route path="clients/:clientId" element={<ClientDetails />} />
+          <Route path="clients/:clientId/campaigns/:campaignId" element={<CampaignWorkspace />} />
           <Route path="tasks" element={<Tasks />} />
           <Route path="settings" element={<div>Settings Page</div>} />
         </Route>

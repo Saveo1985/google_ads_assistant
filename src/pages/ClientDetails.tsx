@@ -71,7 +71,11 @@ export default function ClientDetails() {
                     </div>
                 ) : (
                     campaigns.map((camp) => (
-                        <div key={camp.id} className="bg-white p-6 rounded-xl border border-gray-200 hover:border-[#B7EF02] transition-colors cursor-pointer group">
+                        <div
+                            key={camp.id}
+                            onClick={() => navigate(`/clients/${clientId}/campaigns/${camp.id}`)}
+                            className="bg-white p-6 rounded-xl border border-gray-200 hover:border-[#B7EF02] transition-colors cursor-pointer group"
+                        >
                             <div className="flex justify-between items-start">
                                 <div className="flex items-start gap-4">
                                     <div className="p-3 bg-[#F0F0F3] rounded-lg text-gray-600 group-hover:bg-[#f9fceb] group-hover:text-[#8cb800] transition-colors">
