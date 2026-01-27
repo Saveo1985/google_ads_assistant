@@ -1,38 +1,44 @@
-import { useEffect } from 'react';
-import { Layout } from './components/layout/Layout';
+import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
+import Layout from './components/Layout';
+import Dashboard from './pages/Dashboard';
+import Clients from './pages/Clients';
+import Tasks from './pages/Tasks';
+
+// Simple Login Component for testing
+const Login = () => {
+  const { loading } = useAuth();
+  if (loading) return <div>Loading...</div>;
+  return (
+    <div className="h-screen flex items-center justify-center bg-[#101010]">
+      <div className="text-center">
+        <h1 className="text-4xl font-['Federo'] text-[#B7EF02] mb-4">2H ADS</h1>
+        <p className="text-gray-400 font-['Barlow']">Please sign in via Firebase to continue.</p>
+      </div>
+    </div>
+  );
+};
+
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user, loading } = useAuth();
+  if (loading) return <div className="p-10">Loading App...</div>;
+  if (!user) return <Login />;
+  return <>{children}</>;
+};
 
 function App() {
-  const { user, signIn } = useAuth();
-
-  // Auto-login for development/demo purposes
-  useEffect(() => {
-    if (!user) {
-      signIn();
-    }
-  }, [user, signIn]);
-
   return (
-    <Layout>
-      <header className="mb-8">
-        <div className="flex justify-between items-center">
-          <div>
-            <h2 className="font-heading text-3xl text-brand-black">Dashboard</h2>
-            <p className="text-gray-600 mt-2">Welcome to the Google Ads Assistant Hub.</p>
-          </div>
-          <div className="text-xs font-mono bg-white px-3 py-1 rounded border border-gray-200 text-gray-400">
-            UID: {user?.uid || 'Connecting...'}
-          </div>
-        </div>
-      </header>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <h3 className="font-heading text-lg mb-2">Active Campaigns</h3>
-          <p className="text-3xl font-bold text-brand-primary text-shadow-sm">0</p>
-        </div>
-      </div>
-    </Layout>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
+          <Route index element={<Dashboard />} />
+          <Route path="clients" element={<Clients />} />
+          <Route path="tasks" element={<Tasks />} />
+          <Route path="settings" element={<div>Settings Page</div>} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
   );
 }
 
