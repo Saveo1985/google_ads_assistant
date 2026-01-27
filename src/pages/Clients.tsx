@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Plus, ExternalLink, Briefcase } from 'lucide-react';
 import { onSnapshot, query, orderBy } from 'firebase/firestore';
 import { getAppCollection, Client } from '../lib/db';
 import ClientAssistant from '../components/ClientAssistant';
 
 export default function Clients() {
+    const navigate = useNavigate();
     const [clients, setClients] = useState<Client[]>([]);
     const [showAssistant, setShowAssistant] = useState(false);
     const [loading, setLoading] = useState(true);
@@ -55,7 +57,11 @@ export default function Clients() {
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {clients.map((client) => (
-                        <div key={client.id} className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow group cursor-pointer">
+                        <div
+                            key={client.id}
+                            onClick={() => navigate(`/clients/${client.id}`)}
+                            className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow group cursor-pointer"
+                        >
                             <div className="flex justify-between items-start mb-4">
                                 <div className="w-12 h-12 rounded-lg bg-[#F0F0F3] flex items-center justify-center text-xl font-['Federo'] text-gray-700">
                                     {client.name.substring(0, 1)}

@@ -1,12 +1,13 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import Clients from './pages/Clients';
+import ClientDetails from './pages/ClientDetails';
 import Tasks from './pages/Tasks';
 
-// Simple Login Component for testing
+// Login Component
 const Login = () => {
   const { loading } = useAuth();
   if (loading) return <div>Loading...</div>;
@@ -34,6 +35,7 @@ function App() {
         <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
           <Route index element={<Dashboard />} />
           <Route path="clients" element={<Clients />} />
+          <Route path="clients/:clientId" element={<ClientDetails />} />
           <Route path="tasks" element={<Tasks />} />
           <Route path="settings" element={<div>Settings Page</div>} />
         </Route>
