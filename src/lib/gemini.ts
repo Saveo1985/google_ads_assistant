@@ -8,26 +8,32 @@ export const getGeminiResponse = async (
     history: { role: 'user' | 'model'; parts: { text: string }[] }[],
     memoryBaseContext: string
 ) => {
-    // Wir nutzen Gemini 1.5 Flash für Geschwindigkeit
-    const model = genAI.getGenerativeModel({
-        model: "gemini-1.5-flash",
-        generationConfig: {
-            temperature: 0.7,
-            topK: 40,
-            topP: 0.95,
-            maxOutputTokens: 2048,
-        },
-    });
+    // Validierung des API-Keys
+    if (!API_KEY) {
+        throw new Error("VITE_GEMINI_API_KEY ist nicht in der .env definiert oder leer.");
+    }
 
-    const chat = model.startChat({
-        history: history,
-        generationConfig: {
-            maxOutputTokens: 2048,
-        },
-    });
+    try {
+        // Wir nutzen Gemini 1.5 Flash für Geschwindigkeit
+        const model = genAI.getGenerativeModel({
+            model: "gemini-1.5-flash",
+            generationConfig: {
+                temperature: 0.7,
+                topK: 40,
+                topP: 0.95,
+                maxOutputTokens: 2048,
+            },
+        });
 
-    // System-Instruktion inkl. der CSV-Daten (Memory Base)
-    const systemInstruction = `
+        const chat = model.startChat({
+            history: history,
+            generationConfig: {
+                maxOutputTokens: 2048,
+            },
+        });
+
+        // System-Instruktion inkl. der CSV-Daten (Memory Base)
+        const systemInstruction = `
     Du bist der "2H Web Solutions Google Ads Assistant". 
     Deine Aufgabe ist es, Kampagnen-Daten zu analysieren und strategische Tipps zu geben.
     
@@ -40,9 +46,14 @@ export const getGeminiResponse = async (
     3. Nutze die oben genannten CSV-Daten als primäre Informationsquelle für diese Kampagne.
   `;
 
-    const finalPrompt = `System-Info: ${systemInstruction}\n\nUser-Frage: ${userPrompt}`;
+        const finalPrompt = `System-Info: ${systemInstruction}\n\nUser-Frage: ${userPrompt}`;
 
-    const result = await chat.sendMessage(finalPrompt);
-    const response = await result.response;
-    return response.text();
+        const result = await chat.sendMessage(finalPrompt);
+        const response = await result.response;
+        return response.text();
+    } catch (error) {
+        // Fehler weiterwerfen, damit die UI darauf reagieren kann
+        // Keine sensiblen Daten loggen!
+        throw error;
+    }
 };
