@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Send, CheckSquare, Brain, Clock, MoreVertical } from 'lucide-react';
 import { onSnapshot, addDoc, query, orderBy, serverTimestamp, setDoc } from 'firebase/firestore';
 import { getAppDoc, getAppCollection, APP_ID } from '../lib/db';
+import { getGeminiResponse } from '../lib/gemini';
 
 export default function CampaignWorkspace() {
     const { clientId, campaignId } = useParams();
@@ -67,34 +68,15 @@ export default function CampaignWorkspace() {
                 updatedAt: serverTimestamp()
             }, { merge: true });
 
-            // C. Simulate AI Processing
-            // We will implement a client-side "Task Detector" for immediate feedback
-            setTimeout(async () => {
-                let aiResponse = "I've updated the campaign context.";
-                const lowerText = userText.toLowerCase();
+            // C. Call Gemini AI
+            const history = messages.map(m => ({
+                role: m.role === 'assistant' ? 'model' as const : 'user' as const,
+                parts: [{ text: m.content }]
+            }));
+            const context = campaign.memory_base || "";
 
-                // TASK DETECTION LOGIC
-                if (lowerText.includes('task') || lowerText.includes('remind') || lowerText.includes('check')) {
-                    // Create Task in Global Collection
-                    const dueDate = new Date();
-                    dueDate.setDate(dueDate.getDate() + 14); // Default 2 weeks
-
-                    await addDoc(getAppCollection('tasks'), {
-                        task: `Check Campaign: ${campaign.name}`,
-                        description: `Triggered by chat: "${userText}"`,
-                        related_client_id: clientId,
-                        related_campaign_id: campaignId,
-                        due_date: dueDate.toISOString(),
-                        status: 'Pending',
-                        createdAt: serverTimestamp(),
-                        sourceAppId: APP_ID // Tag source for Global Task Center
-                    });
-
-                    aiResponse = "I've created a task for you to check this campaign in 2 weeks. You can see it in the Tasks sidebar.";
-                }
-                else if (lowerText.includes('summary') && campaign.memory_base) {
-                    aiResponse = `Based on the CSV memory, this campaign has ${campaign.memory_base.length} bytes of data. It focuses on imported keywords.`;
-                }
+            try {
+                const aiResponse = await getGeminiResponse(userText, history, context);
 
                 // D. Save AI Response to Archive
                 await addDoc(getAppCollection(`sessions/${campaignId}/messages`), {
@@ -109,8 +91,16 @@ export default function CampaignWorkspace() {
                     updatedAt: serverTimestamp()
                 }, { merge: true });
 
+            } catch (error) {
+                console.error("Gemini Error:", error);
+                await addDoc(getAppCollection(`sessions/${campaignId}/messages`), {
+                    role: 'assistant',
+                    content: "Entschuldigung, ich konnte keine Verbindung zu meinem KI-Gehirn herstellen.",
+                    createdAt: serverTimestamp()
+                });
+            } finally {
                 setLoading(false);
-            }, 1000);
+            }
 
         } catch (error) {
             console.error("Error sending message:", error);
