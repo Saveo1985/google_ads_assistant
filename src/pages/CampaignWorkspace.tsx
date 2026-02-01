@@ -68,18 +68,16 @@ export default function CampaignWorkspace() {
                 updatedAt: serverTimestamp()
             }, { merge: true });
 
-            // C. Call Gemini AI (Stateless)
+            // C. Call Gemini AI (Stateless with Roles)
             const context = campaign.memory_base || "No specific data context.";
 
-            // Construct Prompt manually
-            const systemPrompt = `You are the "2H Web Solutions Google Ads Assistant".\nAnalyze campaign data and give strategic tips.\nContext: ${context}\n`;
-
+            // Collect Chat History for Context
             const historyText = messages.map(m => `${m.role === 'assistant' ? 'AI' : 'User'}: ${m.content}`).join('\n');
-
-            const fullPrompt = `${systemPrompt}\nChat History:\n${historyText}\nUser: ${userText}\nAI:`;
+            const fullPrompt = `Chat History:\n${historyText}\nUser: ${userText}`;
 
             try {
-                const aiResponse = await getGeminiResponse(fullPrompt);
+                // Use ASSISTANT role for standard chat
+                const aiResponse = await getGeminiResponse(fullPrompt, 'ASSISTANT', context);
 
                 // D. Save AI Response to Archive
                 await addDoc(getAppCollection(`sessions/${campaignId}/messages`), {
