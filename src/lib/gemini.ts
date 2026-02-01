@@ -57,3 +57,41 @@ ${prompt}
         return `⚠️ SYSTEM ERROR: ${error.message || "Unbekannter Fehler bei der KI-Verarbeitung."}`;
     }
 }
+
+/**
+ * Analyzes a brand based on Name and URL to generate a business profile.
+ * usage: const profile = await analyzeBrand("Nike", "nike.com");
+ */
+export async function analyzeBrand(name: string, url: string) {
+    const prompt = `
+    Analyze the brand "${name}" with website "${url}".
+    I need a structured summary of this business.
+    
+    Return ONLY a raw JSON object (no markdown, no quotes) with these fields:
+    {
+      "industry": "Specific Industry (e.g. E-commerce Fashion)",
+      "description": "A 2-sentence professional summary of what they do and who they serve.",
+      "key_products": "Comma separated list of 3 potential main offerings",
+      "suggested_strategy": "1 sentence marketing angle"
+    }
+  `;
+
+    try {
+        // Re-using your existing generic getGeminiResponse, or calling model directly if needed.
+        // Assuming getGeminiResponse returns a string, we parse it.
+        const responseText = await getGeminiResponse(prompt, 'ASSISTANT', 'Focus on factual business analysis.');
+
+        // Clean up potential Markdown formatting from AI (e.g. ```json ... ```)
+        const cleanJson = responseText.replace(/```json|```/g, '').trim();
+        return JSON.parse(cleanJson);
+    } catch (error) {
+        console.error("AI Analysis Failed:", error);
+        // Fallback data if AI fails
+        return {
+            industry: "Unknown",
+            description: `New client: ${name}. Website: ${url}`,
+            key_products: "",
+            suggested_strategy: "Manual review required."
+        };
+    }
+}
