@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Plus, FolderOpen, Calendar, Trash2, Brain, Target } from 'lucide-react';
 import { onSnapshot, query, orderBy, deleteDoc } from 'firebase/firestore';
 import { getAppDoc, getAppCollection } from '../lib/db';
-import CampaignAssistant from '../components/CampaignAssistant';
+import CreateCampaignModal from '../components/campaigns/CreateCampaignModal';
 import { DeleteConfirmationModal } from '../components/ui/DeleteConfirmationModal';
 
 export default function ClientDetails() {
@@ -11,7 +11,7 @@ export default function ClientDetails() {
     const navigate = useNavigate();
     const [client, setClient] = useState<any>(null);
     const [campaigns, setCampaigns] = useState<any[]>([]);
-    const [showAssistant, setShowAssistant] = useState(false);
+    const [showCreateModal, setShowCreateModal] = useState(false);
 
     // Delete Modal State
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -82,7 +82,7 @@ export default function ClientDetails() {
                         </a>
                     </div>
                     <button
-                        onClick={() => setShowAssistant(true)}
+                        onClick={() => setShowCreateModal(true)}
                         className="flex items-center gap-2 bg-[#101010] text-[#B7EF02] px-5 py-2.5 rounded-lg hover:bg-gray-900 transition-colors font-['Barlow'] font-medium"
                     >
                         <Plus size={18} />
@@ -183,12 +183,9 @@ export default function ClientDetails() {
                 )}
             </div>
 
-            {/* Assistant Drawer */}
-            {showAssistant && (
-                <>
-                    <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40" onClick={() => setShowAssistant(false)} />
-                    <CampaignAssistant clientId={clientId!} onClose={() => setShowAssistant(false)} />
-                </>
+            {/* Wizard Modal */}
+            {showCreateModal && (
+                <CreateCampaignModal clientId={clientId!} onClose={() => setShowCreateModal(false)} />
             )}
 
             <DeleteConfirmationModal

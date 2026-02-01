@@ -6,6 +6,7 @@ import { onSnapshot, addDoc, query, orderBy, serverTimestamp, setDoc, getDocs, d
 import { getAppDoc, getAppCollection, APP_ID } from '../lib/db';
 import { getGeminiResponse } from '../lib/gemini';
 import CampaignMemory from '../components/CampaignMemory';
+import CrossCampaignSelector from '../components/campaigns/CrossCampaignSelector';
 
 // --- HELPER COMPONENT: Message Formatter ---
 // Parses **bold** and handles newlines/lists without extra dependencies
@@ -43,26 +44,40 @@ export default function CampaignWorkspace() {
 
     // State
     const [campaign, setCampaign] = useState<any>(null);
+    const [client, setClient] = useState<any>(null);
     const [messages, setMessages] = useState<any[]>([]);
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
     const [showMemory, setShowMemory] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [editedName, setEditedName] = useState('');
+    const [crossCampaignContext, setCrossCampaignContext] = useState('');
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
-    // 1. Load Campaign Data
+    // 1. Load Campaign & Client Data
     useEffect(() => {
         if (!clientId || !campaignId) return;
-        const unsub = onSnapshot(getAppDoc(`clients/${clientId}/campaigns`, campaignId), (doc) => {
+
+        // Fetch Campaign
+        const unsubCampaign = onSnapshot(getAppDoc(`clients/${clientId}/campaigns`, campaignId), (doc) => {
             if (doc.exists()) {
                 const data = doc.data();
                 setCampaign({ id: doc.id, ...data });
-                // Only set editedName if we are not currently editing, to avoid overwriting user input
                 if (!isEditing) setEditedName(data.name);
             }
         });
-        return () => unsub();
+
+        // Fetch Client
+        const unsubClient = onSnapshot(getAppDoc('clients', clientId), (doc) => {
+            if (doc.exists()) {
+                setClient({ id: doc.id, ...doc.data() });
+            }
+        });
+
+        return () => {
+            unsubCampaign();
+            unsubClient();
+        };
     }, [clientId, campaignId, isEditing]);
 
     // 2. Load Smart Archive
@@ -196,8 +211,24 @@ export default function CampaignWorkspace() {
             }
 
             const baseContext = campaign.memory_base || "No specific data context.";
-            // Combine: Base Context + Knowledge Base + Chat History
-            const combinedContext = `${baseContext}\n\n${contextString}`;
+
+            // --- CONSTRUCT CLIENT CONTEXT ---
+            let clientContext = "";
+            if (client) {
+                clientContext = `CLIENT CONTEXT:\n` +
+                    `Name: ${client.name}\n` +
+                    `Industry: ${client.industry || 'Unknown'}\n` +
+                    `About: ${client.description || 'No description provided'}\n` +
+                    `Global Goals: ${client.mainGoal || 'Not specified'}\n` +
+                    `Website: ${client.website || 'N/A'}\n`;
+            }
+
+            // Combine: Client Context + Base Context + Knowledge Base + Cross-Campaign Selection
+            let combinedContext = `${clientContext}\n${baseContext}\n\n${contextString}`;
+
+            if (crossCampaignContext) {
+                combinedContext += `\n\n--- CROSS-CAMPAIGN KNOWLEDGE START ---\n${crossCampaignContext}\n--- CROSS-CAMPAIGN KNOWLEDGE END ---\nUse this knowledge to answer the current request if relevant.`;
+            }
 
             const historyText = messages.map(m => `${m.role === 'assistant' ? 'AI' : 'User'}: ${m.content}`).join('\n');
             const fullPrompt = `Chat History:\n${historyText}\nUser: ${userText}`;
@@ -304,6 +335,11 @@ export default function CampaignWorkspace() {
                             <div className="flex items-center gap-2 text-xs text-gray-500 font-['Barlow']">
                                 <span className="w-2 h-2 rounded-full bg-green-500"></span>
                                 <span>Active Assistant</span>
+                                {client && (
+                                    <span className="ml-2 px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full font-medium" title={`Context Active: ${client.name}`}>
+                                        Brain: {client.name}
+                                    </span>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -383,8 +419,12 @@ export default function CampaignWorkspace() {
 
             {/* RIGHT: Memory & Context Panel (Collapsible) */}
             {showMemory && (
-                <div className="w-80 overflow-hidden animate-in slide-in-from-right duration-300">
-                    {/* Pass clientId and campaignId (fallback to empty string if undefined to satisfy types, though useEffect guards against it) */}
+                <div className="w-80 overflow-hidden animate-in slide-in-from-right duration-300 space-y-4 p-4 bg-gray-50 border-l border-gray-200">
+                    <CrossCampaignSelector
+                        clientId={clientId || ''}
+                        currentCampaignId={campaignId || ''}
+                        onContextChange={setCrossCampaignContext}
+                    />
                     <CampaignMemory clientId={clientId || ''} campaignId={campaignId || ''} />
                 </div>
             )}
