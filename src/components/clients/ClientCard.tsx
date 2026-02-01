@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ExternalLink, Trash2, FolderOpen, Activity, ArrowRight, LayoutDashboard, ChevronDown, ChevronUp } from 'lucide-react';
+import { ExternalLink, Trash2, FolderOpen, ArrowRight, ChevronDown, ChevronUp } from 'lucide-react';
 import { getDocs } from 'firebase/firestore';
-import { getAppCollection, Client } from '../../lib/db';
+import { getAppCollection, type Client } from '../../lib/db';
 
 interface ClientCardProps {
     client: Client;
@@ -35,7 +35,7 @@ export default function ClientCard({ client, onDelete }: ClientCardProps) {
     }, [client.id]);
 
     const handleCardClick = () => {
-        navigate(`/client/${client.id}`);
+        navigate(`/clients/${client.id}`);  // Corrected: Plural 'clients'
     };
 
     const handleExternalLink = (e: React.MouseEvent) => {
@@ -133,7 +133,7 @@ export default function ClientCard({ client, onDelete }: ClientCardProps) {
                                 key={camp.id}
                                 onClick={(e) => {
                                     e.stopPropagation();
-                                    navigate(`/client/${client.id}?campaignId=${camp.id}`); // Or direct deep link if routing supports it
+                                    navigate(`/campaigns/${camp.id}`);  // Corrected: Direct to campaign route
                                 }}
                                 className="px-3 py-2 text-sm text-gray-600 hover:bg-white hover:text-[#B7EF02] cursor-pointer flex items-center justify-between transition-colors font-['Barlow']"
                             >
