@@ -15,20 +15,34 @@ export default function ClientCard({ client, onDelete }: ClientCardProps) {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [loading, setLoading] = useState(true);
 
+    // Strict Navigation Handler
+    const handleCampaignClick = (e: React.MouseEvent, campaignId: string) => {
+        e.stopPropagation();
+        e.preventDefault();
+
+        if (!campaignId) {
+            console.error("Critical Error: Missing Campaign ID in click handler");
+            return;
+        }
+
+        navigate('/campaigns/' + campaignId);
+    };
+
     // Fetch Campaigns on Mount
     useEffect(() => {
         const fetchCampaigns = async () => {
             try {
                 const coll = getAppCollection(`clients/${client.id}/campaigns`);
-                // Use getDocs to get actual data, not just count
                 const snapshot = await getDocs(coll);
-                // CRITICAL: Explicitly capture ID first, or overwrite. User requested specific logic.
-                const campData = snapshot.docs.map(d => ({
-                    id: d.id, // Explicit ID
-                    ...d.data()
+
+                // MANDATORY: Explicit ID Map
+                const campaignsList = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
                 }));
-                console.log(`Loaded campaigns for client ${client.id}:`, campData); // Safety Check
-                setCampaigns(campData);
+
+                console.log(`Loaded ${campaignsList.length} campaigns for ${client.name}`, campaignsList);
+                setCampaigns(campaignsList);
             } catch (error) {
                 console.error("Error fetching campaigns:", error);
             } finally {
@@ -136,14 +150,7 @@ export default function ClientCard({ client, onDelete }: ClientCardProps) {
                         {campaigns.map((camp: any) => (
                             <div
                                 key={camp.id}
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    if (camp.id) {
-                                        navigate(`/campaigns/${camp.id}`);
-                                    } else {
-                                        console.error("Campaign ID missing:", camp);
-                                    }
-                                }}
+                                onClick={(e) => handleCampaignClick(e, camp.id)}
                                 className="px-3 py-2 text-sm text-gray-600 hover:bg-white hover:text-[#B7EF02] cursor-pointer flex items-center justify-between transition-colors font-['Barlow']"
                             >
                                 <span className="truncate">{camp.name}</span>
