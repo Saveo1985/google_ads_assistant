@@ -25,7 +25,8 @@ export default function ClientCard({ client, onDelete }: ClientCardProps) {
             return;
         }
 
-        navigate('/campaigns/' + campaignId);
+        // CORRECT ROUTE: /clients/:clientId/campaigns/:campaignId
+        navigate(`/clients/${client.id}/campaigns/${campaignId}`);
     };
 
     // Fetch Campaigns on Mount
