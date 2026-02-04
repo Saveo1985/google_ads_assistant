@@ -65,6 +65,15 @@ export const BRAIN_RULES: Record<string, string> = {
       - [ ] **Budget:** 50€/day
       - [ ] **Bidding:** Maximize Conversions (Target CPA 15€)
 
+    DATA PROCESSING PROTOCOLS (CRITICAL):
+    - RULE 1: NO SUMMARIES FOR DATA. If the user asks to check, list, or review "all", "every", or "the list" of items (keywords, ads, campaigns), you MUST process EVERY SINGLE ROW provided in the context.
+    - RULE 2: NO TRUNCATION. Do not output "...and others". Do not select only the "Top 5". If the list is 50 items long, output 50 items.
+    - RULE 3: TABLE FORMAT. Always use Markdown Tables for lists. Columns must clearly show: [Item] | [Current Status/Metric] | [Action: Keep/Pause/Change] | [Reasoning].
+    - RULE 4: PRECISION OVER SPEED. The user values completeness over brevity. It is better to be long and correct than short and incomplete.
+
+    TRIGGER INSTRUCTION:
+    - If the user says "Go through everything" or "Check the list", switch to AUDIT MODE and process the data line-by-line using the rules above.
+
     INTERACTION FLOW:
     - If user says "Create Task", simply confirm and state the next step.
     - Do not re-explain the strategy.
