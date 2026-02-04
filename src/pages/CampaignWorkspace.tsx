@@ -1,7 +1,7 @@
 // src/pages/CampaignWorkspace.tsx
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Send, CheckSquare, Brain, Clock, MoreVertical, Archive, Pencil, Check, X, Trash2 } from 'lucide-react';
+import { ArrowLeft, Send, CheckSquare, Brain, Clock, MoreVertical, Archive, Pencil, Check, X, Trash2, Image as ImageIcon } from 'lucide-react';
 import { onSnapshot, addDoc, query, orderBy, serverTimestamp, setDoc, getDocs, deleteDoc, updateDoc } from 'firebase/firestore';
 import { getAppDoc, getAppCollection, APP_ID } from '../lib/db';
 import { getGeminiResponse } from '../lib/gemini';
@@ -52,7 +52,13 @@ export default function CampaignWorkspace() {
     const [isEditing, setIsEditing] = useState(false);
     const [editedName, setEditedName] = useState('');
     const [crossCampaignContext, setCrossCampaignContext] = useState('');
+
+    // Image Upload State
+    const [uploadedImages, setUploadedImages] = useState<{ mimeType: string; data: string; preview: string }[]>([]);
+    const [isDragOver, setIsDragOver] = useState(false);
+
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     // 1. Load Campaign & Client Data
     useEffect(() => {
@@ -93,6 +99,58 @@ export default function CampaignWorkspace() {
         });
         return () => unsub();
     }, [clientId, campaignId]);
+
+    // --- IMAGE HANDLING START ---
+    const processFiles = (files: FileList | null) => {
+        if (!files) return;
+
+        Array.from(files).forEach(file => {
+            if (!file.type.startsWith('image/')) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const result = e.target?.result as string;
+                // Extract base64 (remove data:image/xxx;base64, prefix) for API
+                // But keep full string for preview
+                const base64Data = result.split(',')[1];
+
+                setUploadedImages(prev => [...prev, {
+                    mimeType: file.type,
+                    data: base64Data,
+                    preview: result
+                }]);
+            };
+            reader.readAsDataURL(file);
+        });
+    };
+
+    const handlePaste = (e: React.ClipboardEvent) => {
+        if (e.clipboardData.files.length > 0) {
+            e.preventDefault(); // Prevent double paste if compatible
+            processFiles(e.clipboardData.files);
+        }
+    };
+
+    const handleDrop = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragOver(false);
+        processFiles(e.dataTransfer.files);
+    };
+
+    const handleDragOver = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragOver(true);
+    };
+
+    const handleDragLeave = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragOver(false);
+    };
+
+    const removeImage = (index: number) => {
+        setUploadedImages(prev => prev.filter((_, i) => i !== index));
+    };
+    // --- IMAGE HANDLING END ---
 
     // 3. Handle Smart Archive
     const handleSmartArchive = async () => {
@@ -171,16 +229,27 @@ export default function CampaignWorkspace() {
 
     // 4. Handle Sending Messages (Enhanced with Context)
     const handleSend = async () => {
-        if (!input.trim() || !clientId || !campaignId) return;
+        if ((!input.trim() && uploadedImages.length === 0) || !clientId || !campaignId) return;
 
         const userText = input;
+        const currentImages = [...uploadedImages]; // Copy images for sending
+
         setInput('');
+        setUploadedImages([]); // Clear images from UI immediately
         setLoading(true);
 
         try {
+            // Save USER message
+            // Note: Currently we don't save images to DB history effectively (multimodal persistence is complex without storage). 
+            // We'll append a note about images being sent.
+            let contentToSave = userText;
+            if (currentImages.length > 0) {
+                contentToSave += `\n[Attached ${currentImages.length} Image(s)]`;
+            }
+
             await addDoc(getAppCollection(`sessions/${campaignId}/messages`), {
                 role: 'user',
-                content: userText,
+                content: contentToSave,
                 createdAt: serverTimestamp()
             });
 
@@ -189,7 +258,7 @@ export default function CampaignWorkspace() {
                 appId: APP_ID,
                 clientId: clientId,
                 campaignId: campaignId,
-                lastMessage: userText,
+                lastMessage: userText || "[Image Sent]",
                 updatedAt: serverTimestamp()
             }, { merge: true });
 
@@ -234,7 +303,8 @@ export default function CampaignWorkspace() {
             const fullPrompt = `Chat History:\n${historyText}\nUser: ${userText}`;
 
             try {
-                const aiResponse = await getGeminiResponse(fullPrompt, 'ASSISTANT', combinedContext);
+                // PASS IMAGES TO GEMINI
+                const aiResponse = await getGeminiResponse(fullPrompt, 'ASSISTANT', combinedContext, currentImages.map(img => ({ mimeType: img.mimeType, data: img.data })));
 
                 await addDoc(getAppCollection(`sessions/${campaignId}/messages`), {
                     role: 'assistant',
@@ -392,16 +462,56 @@ export default function CampaignWorkspace() {
                     <div ref={messagesEndRef} />
                 </div>
 
-                {/* Input Area */}
-                <div className="p-4 bg-white border-t border-gray-200">
+                {/* Input Area (Drag & Drop Zone) */}
+                <div
+                    className={`p-4 bg-white border-t transition-colors ${isDragOver ? 'border-[#B7EF02] bg-[#B7EF02]/5' : 'border-gray-200'}`}
+                    onPaste={handlePaste}
+                    onDrop={handleDrop}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                >
+                    {/* Image Previews */}
+                    {uploadedImages.length > 0 && (
+                        <div className="flex gap-2 mb-2 overflow-x-auto py-2">
+                            {uploadedImages.map((img, idx) => (
+                                <div key={idx} className="relative group min-w-[60px] w-[60px] h-[60px] border border-gray-200 rounded-lg overflow-hidden">
+                                    <img src={img.preview} alt="Upload" className="w-full h-full object-cover" />
+                                    <button
+                                        onClick={() => removeImage(idx)}
+                                        className="absolute top-0 right-0 bg-black/50 text-white p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    >
+                                        <X size={12} />
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Input Controls */}
                     <div className="flex gap-2 relative">
+                        <button
+                            onClick={() => fileInputRef.current?.click()}
+                            className={`p-3 rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-500 transition-colors ${uploadedImages.length > 0 ? 'text-[#B7EF02] border-[#B7EF02]' : ''}`}
+                            title="Upload Image"
+                        >
+                            <ImageIcon size={20} />
+                        </button>
+                        <input
+                            type="file"
+                            ref={fileInputRef}
+                            onChange={(e) => processFiles(e.target.files)}
+                            className="hidden"
+                            accept="image/*"
+                            multiple
+                        />
+
                         <input
                             type="text"
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                            placeholder="Ask about strategy, create tasks, or analyze data..."
-                            className="flex-1 pl-4 pr-12 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-[#B7EF02] focus:bg-white transition-all font-['Barlow']"
+                            placeholder={isDragOver ? "Drop image here..." : "Ask about strategy, paste images..."}
+                            className={`flex-1 pl-4 pr-12 py-3 bg-gray-50 border rounded-xl focus:outline-none focus:border-[#B7EF02] focus:bg-white transition-all font-['Barlow'] ${isDragOver ? 'border-[#B7EF02]' : 'border-gray-200'}`}
                         />
                         <button
                             onClick={handleSend}
@@ -412,7 +522,7 @@ export default function CampaignWorkspace() {
                         </button>
                     </div>
                     <p className="text-[10px] text-gray-400 mt-2 text-center font-['Barlow']">
-                        Tip: Type "Create a task to check this in 2 weeks" to test the agent.
+                        Tip: Drag & Drop images or paste from clipboard (Ctrl+V).
                     </p>
                 </div>
             </div>

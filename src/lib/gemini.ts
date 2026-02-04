@@ -17,7 +17,8 @@ const MODEL_NAME = "gemini-3-flash-preview";
 export async function getGeminiResponse(
     prompt: string,
     role: AgentRole = 'ASSISTANT',
-    context: string = ""
+    context: string = "",
+    images: { mimeType: string; data: string }[] = []
 ): Promise<string> {
     if (!API_KEY) {
         console.error("⚠️ SYSTEM ERROR: VITE_GEMINI_API_KEY ist nicht gesetzt.");
@@ -26,14 +27,16 @@ export async function getGeminiResponse(
 
     try {
         // 1. Modell Initialisierung (Gemini 3 Flash Preview)
-        // System Instructions werden direkt im Modell konfiguriert
         const model = genAI.getGenerativeModel({
             model: MODEL_NAME,
             systemInstruction: BRAIN_RULES.CORE + "\n\n" + (BRAIN_RULES[role] || "")
         });
 
-        // 2. Prompt Zusammensetzung
-        const finalPrompt = `
+        // 2. Prompt Zusammensetzung (Multimodal)
+        const parts: any[] = [];
+
+        // Context & User Prompt
+        const textPart = `
 CONTEXT DATA:
 ${context}
 
@@ -41,8 +44,20 @@ USER QUESTION:
 ${prompt}
         `.trim();
 
+        parts.push({ text: textPart });
+
+        // Add Images
+        images.forEach(img => {
+            parts.push({
+                inlineData: {
+                    mimeType: img.mimeType,
+                    data: img.data
+                }
+            });
+        });
+
         // 3. Request
-        const result = await model.generateContent(finalPrompt);
+        const result = await model.generateContent(parts);
         const response = await result.response;
         return response.text();
 
