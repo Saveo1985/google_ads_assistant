@@ -6,7 +6,7 @@ const API_KEY = import.meta.env.VITE_GEMINI_API_KEY || "";
 const genAI = new GoogleGenerativeAI(API_KEY);
 
 // KONFIGURATION: Wir verwenden strikt das neueste Modell laut Projekt-Vorgaben.
-const MODEL_NAME = "gemini-3-flash-preview";
+const MODEL_NAME = "gemini-3-pro-preview";
 
 /**
  * Sendet einen Prompt an Gemini mit spezifischen "Brain Rules".
