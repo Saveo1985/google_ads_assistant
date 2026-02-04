@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import { useAuth } from './context/AuthContext';
 import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
@@ -42,6 +43,10 @@ function App() {
           <Route path="settings" element={<div>Settings Page</div>} />
         </Route>
       </Routes>
+      <Toaster position="bottom-right" toastOptions={{
+        className: "font-['Barlow']",
+        style: { background: '#101010', color: '#B7EF02', border: '1px solid #333' }
+      }} />
     </BrowserRouter>
   );
 }

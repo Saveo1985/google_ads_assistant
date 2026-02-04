@@ -1,6 +1,6 @@
 // src/lib/gemini.ts
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { BRAIN_RULES, AgentRole } from "./ai/roles";
+import { BRAIN_RULES, type AgentRole } from "./ai/roles";
 
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY || "";
 const genAI = new GoogleGenerativeAI(API_KEY);
@@ -60,11 +60,27 @@ ${prompt}
 
 /**
  * Analyzes a brand based on Name and URL to generate a business profile.
- * usage: const profile = await analyzeBrand("Nike", "nike.com");
+ * usage: const profile = await analyzeBrand("Nike", "nike.com", scrapedMarkdown);
  */
-export async function analyzeBrand(name: string, url: string) {
+export async function analyzeBrand(name: string, url: string, scrapedData?: string) {
+    let contextInstruction = `Analyze the brand "${name}" with website "${url}".`;
+
+    if (scrapedData) {
+        contextInstruction += `
+        
+        CRITICAL: Do not guess. Use the following SCRAPED CONTENT from the website to extract the data:
+        ---
+        ${scrapedData.substring(0, 8000)} 
+        ---
+        `;
+    } else {
+        contextInstruction += `
+        Analyze based on the URL context and your knowledge base.
+        `;
+    }
+
     const prompt = `
-    Analyze the brand "${name}" with website "${url}".
+    ${contextInstruction}
     I need a structured summary of this business.
     
     Return ONLY a raw JSON object (no markdown, no quotes) with these fields:
@@ -95,3 +111,37 @@ export async function analyzeBrand(name: string, url: string) {
         };
     }
 }
+
+/**
+ * Refines client analysis data based on user feedback.
+ * @param currentAnalysis The current JSON object of the client analysis.
+ * @param userFeedback The user's natural language correction.
+ */
+export async function refineClientData(currentAnalysis: any, userFeedback: string) {
+    const prompt = `
+    You are correcting business intelligence data for a client.
+    
+    CURRENT DATA:
+    ${JSON.stringify(currentAnalysis, null, 2)}
+    
+    USER CORRECTION:
+    "${userFeedback}"
+    
+    TASK:
+    Update the JSON strictly based on the correction. 
+    - Keep the existing fields: "industry", "description", "key_products" (comma separated), "suggested_strategy".
+    - Only change what the user asked to change.
+    - If the user provides new info, integrate it intelligently.
+    - Return ONLY the raw JSON object. No markdown.
+    `;
+
+    try {
+        const responseText = await getGeminiResponse(prompt, 'ASSISTANT', 'Data refinement task.');
+        const cleanJson = responseText.replace(/```json|```/g, '').trim();
+        return JSON.parse(cleanJson);
+    } catch (error) {
+        console.error("AI Refinement Failed:", error);
+        throw new Error("Could not refine data.");
+    }
+}
+

@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, FolderOpen, Calendar, Trash2, Brain, Target } from 'lucide-react';
+import { ArrowLeft, Plus, FolderOpen, Calendar, Trash2 } from 'lucide-react';
 import { onSnapshot, query, orderBy, deleteDoc } from 'firebase/firestore';
 import { getAppDoc, getAppCollection } from '../lib/db';
 import CreateCampaignModal from '../components/campaigns/CreateCampaignModal';
 import { DeleteConfirmationModal } from '../components/ui/DeleteConfirmationModal';
+import SmartBusinessCard from '../components/clients/SmartBusinessCard';
 
 export default function ClientDetails() {
     const { clientId } = useParams();
@@ -92,51 +93,7 @@ export default function ClientDetails() {
             </div>
 
             {/* AI Business Intelligence Card */}
-            {client.audit && (
-                <div className="mb-8 bg-white p-6 rounded-xl border border-gray-200 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
-                    <div className="flex items-center gap-2 mb-4">
-                        <div className="p-2 bg-[#101010] rounded text-[#B7EF02]">
-                            <Brain size={20} />
-                        </div>
-                        <h2 className="text-xl font-['Federo'] text-gray-900">AI Business Intelligence</h2>
-                        {client.industry && (
-                            <span className="ml-2 px-3 py-1 bg-[#B7EF02]/20 text-black text-xs font-bold uppercase rounded-full font-['Barlow'] tracking-wide">
-                                {client.industry}
-                            </span>
-                        )}
-                    </div>
-
-                    <p className="font-['Barlow'] text-gray-600 mb-6 leading-relaxed max-w-4xl">
-                        {client.description || "No description available."}
-                    </p>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {/* Key Products */}
-                        <div>
-                            <h3 className="text-sm font-bold text-gray-900 uppercase mb-3 font-['Barlow'] flex items-center gap-2">
-                                <span className="w-1.5 h-1.5 bg-black rounded-full"></span> Key Products
-                            </h3>
-                            <div className="flex flex-wrap gap-2">
-                                {(client.audit.products || "").split(',').map((prod: string, i: number) => (
-                                    <span key={i} className="px-3 py-1.5 bg-gray-50 border border-gray-100 rounded text-sm text-gray-700 font-['Barlow']">
-                                        {prod.trim()}
-                                    </span>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* AI Strategy */}
-                        <div className="relative">
-                            <h3 className="text-sm font-bold text-gray-900 uppercase mb-3 font-['Barlow'] flex items-center gap-2">
-                                <Target size={14} /> Suggested Strategy
-                            </h3>
-                            <div className="p-4 bg-gray-50 border-l-4 border-[#B7EF02] text-gray-700 italic font-medium font-['Barlow'] rounded-r-lg">
-                                "{client.audit.strategy}"
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
+            <SmartBusinessCard client={client} />
 
             {/* Campaigns Grid */}
             <div className="grid grid-cols-1 gap-4">
