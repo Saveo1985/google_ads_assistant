@@ -294,6 +294,7 @@ export default function CampaignWorkspace() {
             }
 
             // Combine: Client Context + Base Context + Knowledge Base + Cross-Campaign Selection
+            // SYSTEM: FULL CONTEXT ENFORCED - NO TRUNCATION
             let combinedContext = `${clientContext}\n${baseContext}\n\n${contextString}`;
 
             if (crossCampaignContext) {
