@@ -14,9 +14,56 @@
         "delete": "Löschen",
         "back": "Zurück"
     },
+    "dashboard": {
+        "title": "Agentur Cockpit",
+        "stats": {
+            "active_clients": "Aktive Mandanten",
+            "total_campaigns": "Kampagnen Gesamt",
+            "active_campaigns": "Aktive Kampagnen",
+            "assigned_tasks": "Offene Aufgaben"
+        },
+        "activity": {
+            "title": "Letzte Aktivitäten",
+            "empty": "Keine aktuellen Aktivitäten."
+        }
+    },
     "clients": {
         "title": "Mandanten Übersicht",
         "add_new": "Neuer Mandant",
-        "search_placeholder": "Suche Mandant..."
+        "search_placeholder": "Suche Mandant, Branche...",
+        "table": {
+            "company": "Firma / Mandant",
+            "status": "Status",
+            "campaigns": "Kampagnen",
+            "last_audit": "Letzter Audit",
+            "actions": "Aktionen"
+        },
+        "status": {
+            "active": "Aktiv",
+            "onboarding": "Onboarding",
+            "paused": "Pausiert",
+            "churned": "Gekündigt"
+        }
+    },
+    "economics": {
+        "title": "Profitabilitäts-Simulator",
+        "service_line": "Service / Produktlinie",
+        "add_service": "Service hinzufügen",
+        "delete_service": "Löschen",
+        "inputs": {
+            "aov": "Ø Warenkorbwert (Netto)",
+            "target_roas": "Ziel ROAS",
+            "margin": "Marge / Handelsspanne (%)",
+            "tax": "Steuersatz (%)",
+            "fulfillment": "Versand & Handling",
+            "returns": "Retourenquote (%)"
+        },
+        "kpis": {
+            "break_even_roas": "Break-Even ROAS",
+            "net_profit": "Reingewinn pro Order",
+            "max_cpa": "Max. CPA (Break-Even)"
+        },
+        "save": "Kalkulation speichern",
+        "saved_toast": "Profitabilitäts-Daten gespeichert."
     }
 }

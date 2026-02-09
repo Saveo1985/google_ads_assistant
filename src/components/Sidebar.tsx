@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Users, CheckSquare, Settings, LogOut } from 'lucide-react';
+import { LayoutDashboard, Users, Settings, LogOut } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { getAuth, signOut } from 'firebase/auth';
 import { useTranslation } from 'react-i18next';

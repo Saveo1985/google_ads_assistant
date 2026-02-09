@@ -1,11 +1,12 @@
-// src/pages/Dashboard.tsx
 import React, { useEffect, useState } from 'react';
 import { Users, Megaphone, TrendingUp, Activity, ArrowRight } from 'lucide-react';
 import { getDocs } from 'firebase/firestore';
 import { getAppCollection } from '../lib/db';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 export default function Dashboard() {
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const [stats, setStats] = useState({
         clients: 0,
@@ -48,7 +49,7 @@ export default function Dashboard() {
         <div className="p-8 space-y-8 animate-in fade-in duration-500">
             {/* Header */}
             <div>
-                <h1 className="font-['Federo'] text-3xl text-gray-900">Dashboard</h1>
+                <h1 className="font-['Federo'] text-3xl text-gray-900">{t('dashboard.title')}</h1>
                 <p className="font-['Barlow'] text-gray-500 mt-1">Overview of your Google Ads ecosystem.</p>
             </div>
 
@@ -68,12 +69,12 @@ export default function Dashboard() {
                             <div className="h-4 w-12 bg-gray-100 animate-pulse rounded"></div>
                         ) : (
                             <span className="flex items-center text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full">
-                                <TrendingUp size={12} className="mr-1" /> Active
+                                <TrendingUp size={12} className="mr-1" /> {t('clients.status.active')}
                             </span>
                         )}
                     </div>
                     <div>
-                        <p className="font-['Barlow'] text-sm text-gray-500 font-medium">Total Clients</p>
+                        <p className="font-['Barlow'] text-sm text-gray-500 font-medium">{t('dashboard.stats.active_clients')}</p>
                         {stats.loading ? (
                             <div className="h-8 w-16 bg-gray-100 animate-pulse rounded mt-1"></div>
                         ) : (
@@ -93,7 +94,7 @@ export default function Dashboard() {
                         </span>
                     </div>
                     <div>
-                        <p className="font-['Barlow'] text-sm text-gray-500 font-medium">Active Campaigns</p>
+                        <p className="font-['Barlow'] text-sm text-gray-500 font-medium">{t('dashboard.stats.active_campaigns')}</p>
                         {stats.loading ? (
                             <div className="h-8 w-16 bg-gray-100 animate-pulse rounded mt-1"></div>
                         ) : (
@@ -110,7 +111,7 @@ export default function Dashboard() {
                         </div>
                     </div>
                     <div>
-                        <p className="font-['Barlow'] text-sm text-gray-400 font-medium">Pending Tasks</p>
+                        <p className="font-['Barlow'] text-sm text-gray-400 font-medium">{t('dashboard.stats.assigned_tasks')}</p>
                         <h3 className="font-['Federo'] text-3xl text-gray-300">--</h3>
                     </div>
                 </div>

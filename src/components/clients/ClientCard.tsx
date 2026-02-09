@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ExternalLink, Trash2, FolderOpen, ArrowRight, ChevronDown, ChevronUp } from 'lucide-react';
 import { getDocs } from 'firebase/firestore';
 import { getAppCollection, type Client } from '../../lib/db';
+import { useTranslation } from 'react-i18next';
 
 interface ClientCardProps {
     client: Client;
@@ -10,6 +11,7 @@ interface ClientCardProps {
 }
 
 export default function ClientCard({ client, onDelete }: ClientCardProps) {
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const [campaigns, setCampaigns] = useState<any[]>([]);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -88,7 +90,7 @@ export default function ClientCard({ client, onDelete }: ClientCardProps) {
                         </h3>
                         <div className="flex items-center gap-1.5 mt-0.5">
                             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                            <span className="text-xs text-gray-500 font-medium font-['Barlow']">Active</span>
+                            <span className="text-xs text-gray-500 font-medium font-['Barlow']">{t('clients.status.active')}</span>
                         </div>
                     </div>
                 </div>
@@ -108,7 +110,7 @@ export default function ClientCard({ client, onDelete }: ClientCardProps) {
                         <button
                             onClick={handleDelete}
                             className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                            title="Delete Client"
+                            title={t('common.delete')}
                         >
                             <Trash2 size={16} />
                         </button>
@@ -127,7 +129,7 @@ export default function ClientCard({ client, onDelete }: ClientCardProps) {
                         }`}
                 >
                     <FolderOpen size={18} className="text-gray-400 group-hover:text-[#B7EF02] transition-colors" />
-                    <span className="font-['Barlow'] text-sm font-medium flex-1">Campaigns</span>
+                    <span className="font-['Barlow'] text-sm font-medium flex-1">{t('clients.table.campaigns')}</span>
 
                     <div className="flex items-center gap-2">
                         <span className="font-bold text-gray-900 font-['Barlow']">

@@ -14,9 +14,56 @@
         "delete": "Delete",
         "back": "Back"
     },
+    "dashboard": {
+        "title": "Agency Cockpit",
+        "stats": {
+            "active_clients": "Active Clients",
+            "total_campaigns": "Total Campaigns",
+            "active_campaigns": "Active Campaigns",
+            "assigned_tasks": "Open Tasks"
+        },
+        "activity": {
+            "title": "Recent Activity",
+            "empty": "No recent activity."
+        }
+    },
     "clients": {
         "title": "Client Overview",
         "add_new": "New Client",
-        "search_placeholder": "Search client..."
+        "search_placeholder": "Search client, industry...",
+        "table": {
+            "company": "Company / Client",
+            "status": "Status",
+            "campaigns": "Campaigns",
+            "last_audit": "Last Audit",
+            "actions": "Actions"
+        },
+        "status": {
+            "active": "Active",
+            "onboarding": "Onboarding",
+            "paused": "Paused",
+            "churned": "Churned"
+        }
+    },
+    "economics": {
+        "title": "Profitability Simulator",
+        "service_line": "Service / Product Line",
+        "add_service": "Add Service",
+        "delete_service": "Delete",
+        "inputs": {
+            "aov": "Avg. Order Value (Net)",
+            "target_roas": "Target ROAS",
+            "margin": "Margin (%)",
+            "tax": "Tax Rate (%)",
+            "fulfillment": "Shipping & Handling",
+            "returns": "Return Rate (%)"
+        },
+        "kpis": {
+            "break_even_roas": "Break-Even ROAS",
+            "net_profit": "Net Profit per Order",
+            "max_cpa": "Max. CPA (Break-Even)"
+        },
+        "save": "Save Calculation",
+        "saved_toast": "Profitability data saved."
     }
 }

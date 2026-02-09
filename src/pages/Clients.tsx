@@ -1,18 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Plus, Briefcase } from 'lucide-react';
+import { Plus, Briefcase, Search } from 'lucide-react';
 import { onSnapshot, query, orderBy, deleteDoc } from 'firebase/firestore';
 import { getAppCollection, getAppDoc, type Client } from '../lib/db';
 import ClientAssistant from '../components/ClientAssistant';
 import ClientCard from '../components/clients/ClientCard';
 import { DeleteConfirmationModal } from '../components/ui/DeleteConfirmationModal';
+import { useTranslation } from 'react-i18next';
 
 export default function Clients() {
-    // navigate is used in ClientCard, not here anymore directly in map
-    // const navigate = useNavigate();
+    const { t } = useTranslation();
     const [clients, setClients] = useState<Client[]>([]);
     const [showAssistant, setShowAssistant] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [searchTerm, setSearchTerm] = useState('');
 
     // Delete Modal State
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -53,24 +53,42 @@ export default function Clients() {
         return () => unsubscribe();
     }, []);
 
+    const filteredClients = clients.filter(client =>
+        client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        client.industry?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
     return (
         <div className="relative h-full">
-            <div className="flex justify-between items-center mb-8">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                 <div>
-                    <h1 className="text-3xl font-['Federo'] text-gray-900">Clients</h1>
+                    <h1 className="text-3xl font-['Federo'] text-gray-900">{t('clients.title')}</h1>
                     <p className="text-gray-500 font-['Barlow']">Manage your client portfolio</p>
                 </div>
-                <button
-                    onClick={() => setShowAssistant(true)}
-                    className="flex items-center gap-2 bg-[#101010] text-[#B7EF02] px-5 py-2.5 rounded-lg hover:bg-gray-900 transition-colors font-['Barlow'] font-medium"
-                >
-                    <Plus size={18} />
-                    <span>Add Client</span>
-                </button>
+
+                <div className="flex items-center gap-3 w-full md:w-auto">
+                    <div className="relative flex-1 md:flex-none">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                        <input
+                            type="text"
+                            placeholder={t('clients.search_placeholder')}
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="pl-10 pr-4 py-2.5 rounded-lg border border-gray-200 focus:outline-none focus:border-[#B7EF02] w-full md:w-64 font-['Barlow']"
+                        />
+                    </div>
+                    <button
+                        onClick={() => setShowAssistant(true)}
+                        className="flex items-center gap-2 bg-[#101010] text-[#B7EF02] px-5 py-2.5 rounded-lg hover:bg-gray-900 transition-colors font-['Barlow'] font-medium whitespace-nowrap"
+                    >
+                        <Plus size={18} />
+                        <span>{t('clients.add_new')}</span>
+                    </button>
+                </div>
             </div>
 
             {loading ? (
-                <div className="text-center py-20 text-gray-400">Loading clients...</div>
+                <div className="text-center py-20 text-gray-400">{t('common.loading')}</div>
             ) : clients.length === 0 ? (
                 <div className="text-center py-20 bg-white rounded-xl border border-dashed border-gray-300">
                     <Briefcase className="mx-auto text-gray-300 mb-4" size={48} />
@@ -85,7 +103,7 @@ export default function Clients() {
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {clients.map((client) => (
+                    {filteredClients.map((client) => (
                         <ClientCard
                             key={client.id}
                             client={client}
@@ -107,7 +125,7 @@ export default function Clients() {
                 isOpen={deleteModalOpen}
                 onClose={() => setDeleteModalOpen(false)}
                 onConfirm={confirmDeleteClient}
-                title="Client Löschen"
+                title={t('common.delete') + " Client"}
                 itemName={clientToDelete?.name || 'Client'}
                 isLoading={isDeleting}
             />

@@ -4,6 +4,7 @@ import { updateDoc } from 'firebase/firestore';
 import { getAppDoc, type UnitEconomics, type ServiceLineEconomics } from '../../lib/db';
 import toast from 'react-hot-toast';
 import { v4 as uuidv4 } from 'uuid';
+import { useTranslation } from 'react-i18next';
 
 interface ClientEconomicsSimulatorProps {
     clientId: string;
@@ -12,6 +13,7 @@ interface ClientEconomicsSimulatorProps {
 }
 
 export default function ClientEconomicsSimulator({ clientId, initialData, initialServiceLines }: ClientEconomicsSimulatorProps) {
+    const { t } = useTranslation();
     // State
     const [serviceLines, setServiceLines] = useState<ServiceLineEconomics[]>([]);
     const [activeServiceId, setActiveServiceId] = useState<string>('');
@@ -38,7 +40,7 @@ export default function ClientEconomicsSimulator({ clientId, initialData, initia
             setServiceLines([defaultService]);
             setActiveServiceId(defaultService.id);
         }
-    }, []); // Only run once on mount (or when deps change if needed, but carefully)
+    }, []); // Only run once on mount
 
     const activeService = serviceLines.find(s => s.id === activeServiceId) || serviceLines[0];
 
@@ -72,7 +74,7 @@ export default function ClientEconomicsSimulator({ clientId, initialData, initia
     };
 
     const handleAddService = () => {
-        const name = prompt("Enter Service Name (e.g. 'Lasertag'):");
+        const name = prompt(`${t('economics.service_line')} Name (e.g. 'Lasertag'):`);
         if (!name) return;
 
         const newService: ServiceLineEconomics = {
@@ -89,7 +91,7 @@ export default function ClientEconomicsSimulator({ clientId, initialData, initia
 
         setServiceLines([...serviceLines, newService]);
         setActiveServiceId(newService.id);
-        toast.success(`Service '${name}' added`);
+        toast.success(`${t('economics.add_service')}: '${name}'`);
     };
 
     const handleDeleteService = () => {
@@ -97,12 +99,12 @@ export default function ClientEconomicsSimulator({ clientId, initialData, initia
             toast.error("Cannot delete the last service line.");
             return;
         }
-        if (!window.confirm(`Delete service '${activeService?.name}'?`)) return;
+        if (!window.confirm(`${t('economics.delete_service')} '${activeService?.name}'?`)) return;
 
         const filtered = serviceLines.filter(s => s.id !== activeServiceId);
         setServiceLines(filtered);
         setActiveServiceId(filtered[0].id);
-        toast.success("Service line deleted");
+        toast.success(t('economics.delete_service'));
     };
 
 
@@ -113,7 +115,7 @@ export default function ClientEconomicsSimulator({ clientId, initialData, initia
             await updateDoc(getAppDoc('clients', clientId), {
                 serviceLines: serviceLines
             });
-            toast.success("Service Lines saved successfully!");
+            toast.success(t('economics.saved_toast'));
         } catch (error) {
             console.error("Error saving economics:", error);
             toast.error("Failed to save data.");
@@ -122,7 +124,7 @@ export default function ClientEconomicsSimulator({ clientId, initialData, initia
         }
     };
 
-    if (!activeService) return <div className="p-4">Loading Economics...</div>;
+    if (!activeService) return <div className="p-4">{t('common.loading')}</div>;
 
     return (
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden mb-8">
@@ -133,7 +135,7 @@ export default function ClientEconomicsSimulator({ clientId, initialData, initia
                         <Calculator size={20} />
                     </div>
                     <div>
-                        <h3 className="font-['Federo'] text-lg leading-none">Unity Economics Simulator</h3>
+                        <h3 className="font-['Federo'] text-lg leading-none">{t('economics.title')}</h3>
                         <p className="font-['Barlow'] text-xs text-gray-500">Manage Profit Centers & Service Lines</p>
                     </div>
                 </div>
@@ -144,22 +146,22 @@ export default function ClientEconomicsSimulator({ clientId, initialData, initia
                     className="flex items-center gap-2 bg-[#101010] text-[#B7EF02] px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-900 transition-colors disabled:opacity-70 self-end md:self-center"
                 >
                     {isSaving ? <RefreshCw size={16} className="animate-spin" /> : <Save size={16} />}
-                    Save All
+                    {t('economics.save')}
                 </button>
             </div>
 
             {/* Service Line Selector */}
             <div className="px-4 py-3 border-b border-gray-200 flex items-center gap-2 overflow-x-auto bg-white no-scrollbar">
                 <div className="flex items-center gap-1 text-xs font-bold text-gray-400 uppercase tracking-wider mr-2">
-                    <Layers size={14} /> Profit Centers:
+                    <Layers size={14} /> {t('economics.service_line')}:
                 </div>
                 {serviceLines.map(service => (
                     <button
                         key={service.id}
                         onClick={() => setActiveServiceId(service.id)}
                         className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap ${activeServiceId === service.id
-                                ? 'bg-[#B7EF02] text-black shadow-sm ring-1 ring-[#a4d602]'
-                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                            ? 'bg-[#B7EF02] text-black shadow-sm ring-1 ring-[#a4d602]'
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                             }`}
                     >
                         {service.name}
@@ -168,7 +170,7 @@ export default function ClientEconomicsSimulator({ clientId, initialData, initia
                 <button
                     onClick={handleAddService}
                     className="p-1.5 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors"
-                    title="Add Service Line"
+                    title={t('economics.add_service')}
                 >
                     <Plus size={14} />
                 </button>
@@ -182,7 +184,7 @@ export default function ClientEconomicsSimulator({ clientId, initialData, initia
                         <button
                             onClick={handleDeleteService}
                             className="text-gray-300 hover:text-red-500 transition-colors"
-                            title="Delete current service line"
+                            title={t('economics.delete_service')}
                         >
                             <Trash2 size={16} />
                         </button>
@@ -192,14 +194,14 @@ export default function ClientEconomicsSimulator({ clientId, initialData, initia
                         <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">Revenue & Goals ({activeService.name})</label>
                         <div className="grid grid-cols-2 gap-4">
                             <InputGroup
-                                label="Avg Order Value"
+                                label={t('economics.inputs.aov')}
                                 icon={<DollarSign size={14} />}
                                 value={activeService.aov}
                                 onChange={(v) => handleChange('aov', v)}
                                 suffix="€"
                             />
                             <InputGroup
-                                label="Target ROAS"
+                                label={t('economics.inputs.target_roas')}
                                 icon={<TrendingUp size={14} />}
                                 value={activeService.targetRoas}
                                 onChange={(v) => handleChange('targetRoas', v)}
@@ -212,14 +214,14 @@ export default function ClientEconomicsSimulator({ clientId, initialData, initia
                         <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">Deductions</label>
                         <div className="grid grid-cols-2 gap-4">
                             <InputGroup
-                                label="Tax / VAT"
+                                label={t('economics.inputs.tax')}
                                 icon={<Percent size={14} />}
                                 value={activeService.taxRate}
                                 onChange={(v) => handleChange('taxRate', v)}
                                 suffix="%"
                             />
                             <InputGroup
-                                label="Return Rate"
+                                label={t('economics.inputs.returns')}
                                 icon={<Percent size={14} />}
                                 value={activeService.returnRate}
                                 onChange={(v) => handleChange('returnRate', v)}
@@ -232,14 +234,14 @@ export default function ClientEconomicsSimulator({ clientId, initialData, initia
                         <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">Product Costs</label>
                         <div className="grid grid-cols-2 gap-4">
                             <InputGroup
-                                label="COGS (Product)"
+                                label={t('economics.inputs.margin')}
                                 icon={<Percent size={14} />}
                                 value={activeService.cogs}
                                 onChange={(v) => handleChange('cogs', v)}
                                 suffix="%"
                             />
                             <InputGroup
-                                label="Fulfillment Cost"
+                                label={t('economics.inputs.fulfillment')}
                                 icon={<Package size={14} />}
                                 value={activeService.fulfillmentCost}
                                 onChange={(v) => handleChange('fulfillmentCost', v)}
@@ -253,14 +255,14 @@ export default function ClientEconomicsSimulator({ clientId, initialData, initia
                 <div className="p-6 md:w-1/2 bg-[#F9FAFB] flex flex-col justify-center font-['Barlow']">
                     <div className="grid grid-cols-2 gap-4 mb-6">
                         <KPICard
-                            label="Break Even ROAS"
+                            label={t('economics.kpis.break_even_roas')}
                             value={metrics.breakEvenRoas.toFixed(2)}
                             subtext="Min. ROAS to not lose money"
                             highlight={activeService.targetRoas < metrics.breakEvenRoas}
                             color={activeService.targetRoas < metrics.breakEvenRoas ? "text-red-600" : "text-gray-900"}
                         />
                         <KPICard
-                            label="Max CPA (Break Even)"
+                            label={t('economics.kpis.max_cpa')}
                             value={`€${metrics.breakEvenCpa.toFixed(2)}`}
                             subtext="Max Ad Spend per Order"
                         />
@@ -271,7 +273,7 @@ export default function ClientEconomicsSimulator({ clientId, initialData, initia
                             <DollarSign size={80} />
                         </div>
                         <div className="relative z-10">
-                            <p className="text-gray-400 text-sm uppercase font-bold tracking-wider mb-1">Net Profit per Order</p>
+                            <p className="text-gray-400 text-sm uppercase font-bold tracking-wider mb-1">{t('economics.kpis.net_profit')}</p>
                             <div className={`text-4xl font-['Federo'] mb-2 ${metrics.netProfit < 0 ? 'text-red-400' : 'text-[#B7EF02]'}`}>
                                 €{metrics.netProfit.toFixed(2)}
                             </div>

@@ -1,10 +1,9 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Send, CheckSquare, Brain, Clock, MoreVertical, Archive, Pencil, Check, X, Trash2, Image as ImageIcon } from 'lucide-react';
+import { ArrowLeft, Send, Brain, Archive, Pencil, Check, X, Trash2, Image as ImageIcon } from 'lucide-react';
 import { onSnapshot, addDoc, query, orderBy, serverTimestamp, setDoc, getDocs, deleteDoc, updateDoc } from 'firebase/firestore';
 import { getAppDoc, getAppCollection, APP_ID } from '../lib/db';
 import { getGeminiResponse } from '../lib/gemini';
-import toast from 'react-hot-toast';
 import { GoogleAdsSyncButton } from '../components/campaigns/GoogleAdsSyncButton';
 import CampaignMemory from '../components/CampaignMemory';
 import CrossCampaignSelector from '../components/campaigns/CrossCampaignSelector';
