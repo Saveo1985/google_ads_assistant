@@ -146,7 +146,16 @@ export default function ClientDetails() {
             <SmartBusinessCard client={client} />
 
             {/* Economics Simulator */}
-            <ClientEconomicsSimulator clientId={client.id} initialData={client.unitEconomics} />
+            <ClientEconomicsSimulator
+                clientId={client.id}
+                initialData={client.unitEconomics}
+                initialServiceLines={client.serviceLines || (client.unitEconomics ? [{
+                    id: 'default',
+                    name: 'General',
+                    currency: 'EUR',
+                    ...client.unitEconomics
+                }] : [])}
+            />
 
             {/* Campaigns Grid */}
             <div className="grid grid-cols-1 gap-4">

@@ -13,13 +13,25 @@ export const getAppDoc = (subPath: string, docId: string) => {
 };
 
 // Types
-export interface UnitEconomics {
+export interface UnitEconomics { // @deprecated: Use ServiceLineEconomics
+    aov: number;
+    targetRoas: number;
+    taxRate: number;
+    returnRate: number;
+    cogs: number;
+    fulfillmentCost: number;
+}
+
+export interface ServiceLineEconomics {
+    id: string;           // UUID or Timestamp
+    name: string;         // e.g. "Lasertag", "Pixel Games"
+    currency: string;     // e.g. "EUR"
     aov: number;          // Average Order Value
-    targetRoas: number;   // Ziel ROAS (z.B. 4.0 für 400%)
-    taxRate: number;      // Steuersatz in %
-    returnRate: number;   // Retourenquote in %
-    cogs: number;         // Cost of Goods Sold in %
-    fulfillmentCost: number; // Versand/Handling in Währung
+    targetRoas: number;   // Target ROAS
+    taxRate: number;      // Tax Rate %
+    returnRate: number;   // Return Rate %
+    cogs: number;         // COGS %
+    fulfillmentCost: number; // Absolute value
 }
 
 export interface Client {
@@ -28,7 +40,9 @@ export interface Client {
     website: string;
     industry?: string;
     description?: string;
+    /** @deprecated Use serviceLines instead */
     unitEconomics?: UnitEconomics;
+    serviceLines?: ServiceLineEconomics[];
     createdAt: any;
 }
 

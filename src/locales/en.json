@@ -1,0 +1,22 @@
+{
+    "nav": {
+        "dashboard": "Dashboard",
+        "clients": "Clients",
+        "campaigns": "Campaigns",
+        "settings": "Settings",
+        "logout": "Logout"
+    },
+    "common": {
+        "save": "Save",
+        "cancel": "Cancel",
+        "loading": "Loading...",
+        "edit": "Edit",
+        "delete": "Delete",
+        "back": "Back"
+    },
+    "clients": {
+        "title": "Client Overview",
+        "add_new": "New Client",
+        "search_placeholder": "Search client..."
+    }
+}

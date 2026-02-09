@@ -1,0 +1,22 @@
+{
+    "nav": {
+        "dashboard": "Dashboard",
+        "clients": "Mandanten",
+        "campaigns": "Kampagnen",
+        "settings": "Einstellungen",
+        "logout": "Abmelden"
+    },
+    "common": {
+        "save": "Speichern",
+        "cancel": "Abbrechen",
+        "loading": "Laden...",
+        "edit": "Bearbeiten",
+        "delete": "Löschen",
+        "back": "Zurück"
+    },
+    "clients": {
+        "title": "Mandanten Übersicht",
+        "add_new": "Neuer Mandant",
+        "search_placeholder": "Suche Mandant..."
+    }
+}
