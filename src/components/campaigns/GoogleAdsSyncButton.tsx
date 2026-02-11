@@ -3,17 +3,18 @@ import { RefreshCw } from 'lucide-react';
 import { useN8nTrigger } from '../../hooks/useN8nTrigger';
 import { toast } from 'react-hot-toast';
 import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import type { Timestamp } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 
 interface GoogleAdsSyncButtonProps {
     clientId: string;
     campaignId?: string;
-    lastSyncedAt?: any;
+    lastSyncedAt?: Timestamp | Date | string | null;
 }
 
 export const GoogleAdsSyncButton: React.FC<GoogleAdsSyncButtonProps> = ({ clientId, campaignId, lastSyncedAt }) => {
     const { triggerWorkflow, isLoading } = useN8nTrigger();
-    const [lastSyncTime, setLastSyncTime] = useState<any>(lastSyncedAt);
+    const [lastSyncTime, setLastSyncTime] = useState<Timestamp | Date | string | null | undefined>(lastSyncedAt);
 
     // Sync state with prop
     useEffect(() => {
@@ -86,7 +87,9 @@ export const GoogleAdsSyncButton: React.FC<GoogleAdsSyncButtonProps> = ({ client
             <div className="text-center mt-2">
                 <p className="text-[10px] text-gray-400 font-['Barlow']">
                     {lastSyncTime ?
-                        `Letzter Sync: ${new Intl.DateTimeFormat('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(lastSyncTime.toDate ? lastSyncTime.toDate() : new Date(lastSyncTime))}`
+                        `Letzter Sync: ${new Intl.DateTimeFormat('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(
+                            (lastSyncTime as Timestamp).toDate ? (lastSyncTime as Timestamp).toDate() : new Date(lastSyncTime as string | Date)
+                        )}`
                         : "Noch nie synchronisiert"}
                 </p>
             </div>

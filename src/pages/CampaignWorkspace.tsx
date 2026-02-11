@@ -7,6 +7,7 @@ import { getGeminiResponse } from '../lib/gemini';
 import { GoogleAdsSyncButton } from '../components/campaigns/GoogleAdsSyncButton';
 import CampaignMemory from '../components/CampaignMemory';
 import CrossCampaignSelector from '../components/campaigns/CrossCampaignSelector';
+import type { Campaign, Client, CampaignStats, Message } from '../types';
 
 // --- HELPER COMPONENT: Message Formatter ---
 // Parses **bold** and handles newlines/lists without extra dependencies
@@ -43,9 +44,9 @@ export default function CampaignWorkspace() {
     const navigate = useNavigate();
 
     // State
-    const [campaign, setCampaign] = useState<any>(null);
-    const [client, setClient] = useState<any>(null);
-    const [messages, setMessages] = useState<any[]>([]);
+    const [campaign, setCampaign] = useState<Campaign | null>(null);
+    const [client, setClient] = useState<Client | null>(null);
+    const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
     const [showMemory, setShowMemory] = useState(false);
@@ -68,7 +69,7 @@ export default function CampaignWorkspace() {
         const unsubCampaign = onSnapshot(getAppDoc(`clients/${clientId}/campaigns`, campaignId), (doc) => {
             if (doc.exists()) {
                 const data = doc.data();
-                setCampaign({ id: doc.id, ...data });
+                setCampaign({ id: doc.id, ...data } as Campaign);
                 if (!isEditing) setEditedName(data.name);
             }
         });
@@ -76,7 +77,7 @@ export default function CampaignWorkspace() {
         // Fetch Client
         const unsubClient = onSnapshot(getAppDoc('clients', clientId), (doc) => {
             if (doc.exists()) {
-                setClient({ id: doc.id, ...doc.data() });
+                setClient({ id: doc.id, ...doc.data() } as Client);
             }
         });
 
@@ -94,7 +95,7 @@ export default function CampaignWorkspace() {
             orderBy('createdAt', 'asc')
         );
         const unsub = onSnapshot(q, (snapshot) => {
-            setMessages(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
+            setMessages(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Message)));
             setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
         });
         return () => unsub();
@@ -279,7 +280,7 @@ export default function CampaignWorkspace() {
                 console.error("Error fetching knowledge base context:", err);
             }
 
-            const baseContext = campaign.memory_base || "No specific data context.";
+            const baseContext = campaign?.memory_base || "No specific data context.";
 
             // --- CONSTRUCT CLIENT CONTEXT ---
             let clientContext = "";
@@ -304,13 +305,24 @@ export default function CampaignWorkspace() {
                 });
 
                 // 2. LIVE STATS AUS FIREBASE (Fallback auf 0 falls leer)
-                const stats = campaign.stats || {};
-                const liveClicks = stats.clicks || 0;
-                const liveCost = stats.cost || 0;
-                const liveConversions = stats.conversions || 0;
+                const stats = campaign.stats || {} as CampaignStats;
+                const liveClicks = Number(stats.clicks) || 0;
+                const liveCost = Number(stats.cost) || 0;
+                const liveConversions = Number(stats.conversions) || 0;
                 const liveCPA = liveConversions > 0 ? (liveCost / liveConversions).toFixed(2) : "0.00";
 
-                // 3. DER OVERRIDE-TEXT
+                // 3. DAILY STATS TIMELINE
+                let dailyStatsText = "";
+                if (campaign.dailyStats && campaign.dailyStats.length > 0) {
+                    // Sort descending (newest first)
+                    const sortedStats = [...campaign.dailyStats].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+                    dailyStatsText = `\n### DAILY PERFORMANCE HISTORY (LAST 30 DAYS):\n` +
+                        sortedStats.map(stat =>
+                            `DATE: ${stat.date} | CLICKS: ${stat.clicks} | COST: ${(stat.cost_micros / 1000000).toFixed(2)} | CONVERSIONS: ${stat.conversions}`
+                        ).join('\n');
+                }
+
+                // 4. DER OVERRIDE-TEXT
                 liveContextInjection = `
 ================================================================
 *** SYSTEM-ZEIT & LIVE-DATEN OVERRIDE (PRIORITÄT: HOCH) ***
@@ -318,17 +330,19 @@ export default function CampaignWorkspace() {
 HEUTIGES DATUM: ${today}
 
 ACHTUNG - KRITISCHE ANWEISUNG ZUR DATENQUELLE:
-Die angehängten CSV-Dateien (Memory) sind Historie und enden möglicherweise in der Vergangenheit (z.B. 1. Feb).
-Das ist NICHT das aktuelle Datum. Ignoriere das Enddatum der Datei für "Status Quo"-Fragen.
+Die angehängten CSV-Dateien (Memory) sind Historie und enden möglicherweise in der Vergangenheit.
+IGNORIERE das Enddatum der Datei für "Status Quo"-Fragen.
 
-NUTZE FÜR AKTUELLE ANALYSEN DIESE LIVE-DATEN (Letzte 30 Tage, Stand HEUTE):
-- Klicks: ${liveClicks}
-- Kosten: ${liveCost} €
-- Conversions: ${liveConversions}
+NUTZE FÜR AKTUELLE ANALYSEN DIESE LIVE-DATEN (Stand HEUTE):
+- Klicks (Total): ${liveClicks}
+- Kosten (Total): ${liveCost} €
+- Conversions (Total): ${liveConversions}
 - Aktueller CPA: ${liveCPA} €
 - Kampagnen-Status: ${campaign.status || 'Aktiv'}
+${dailyStatsText}
 
-WENN der User fragt "Wie läuft es?" oder "Was machen wir heute?", beziehe dich IMMER auf diese Live-Werte und das Datum ${today}.
+WENN der User nach einem bestimmten Datum fragt (z.B. "Wie war es gestern?" oder "Am 12.02."), NUTZE DIE DATEN AUS "DAILY PERFORMANCE HISTORY".
+WENN der User fragt "Wie läuft es?", beziehe dich IMMER auf diese Live-Werte und das Datum ${today}.
 ================================================================
 `;
             }
@@ -394,7 +408,7 @@ WENN der User fragt "Wie läuft es?" oder "Was machen wir heute?", beziehe dich 
                 name: editedName
             });
             // Update local state immediately for better UX
-            setCampaign((prev: any) => ({ ...prev, name: editedName }));
+            setCampaign((prev) => prev ? { ...prev, name: editedName } : null);
             setIsEditing(false);
         } catch (error) {
             console.error("Error updating campaign name:", error);
