@@ -299,16 +299,23 @@ export default function CampaignWorkspace() {
                 const lastSyncDate = campaign.lastSyncedAt ? (campaign.lastSyncedAt.toDate ? campaign.lastSyncedAt.toDate() : new Date(campaign.lastSyncedAt)) : null;
                 const formattedDate = lastSyncDate ? new Intl.DateTimeFormat('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(lastSyncDate) : "Nie";
 
+                const cost = Number(campaign.stats?.cost) || 0;
+                const conversionValue = Number(campaign.stats?.conversionValue) || 0;
+                const roas = cost > 0 ? (conversionValue / cost).toFixed(2) : 'N/A';
+
                 liveDataContext =
-                    `\n--- CURRENT LIVE DATA (GOOGLE ADS SYNC) ---\n` +
-                    `Last Sync: ${formattedDate}\n` +
+                    `\n=== LIVE PERFORMANCE DATA (LAST 30 DAYS SYNC) ===\n` +
+                    `Last Updated: ${formattedDate}\n` +
                     `Impressions: ${campaign.stats?.impressions || 0}\n` +
                     `Clicks: ${campaign.stats?.clicks || 0}\n` +
-                    `Cost: ${campaign.stats?.cost || 0} ${currency}\n` +
+                    `Cost: ${cost} ${currency}\n` +
                     `Conversions: ${campaign.stats?.conversions || 0}\n` +
-                    `Status: ${campaign.status}\n` +
-                    `-------------------------------------------\n` +
-                    `WARNUNG: Diese Live-Daten sind aktueller als jede hochgeladene CSV-Datei. Nutze IMMER diese Werte für die Analyse der aktuellen Performance.\n`;
+                    `ROAS: ${roas}\n` +
+                    `-------------------------------------------------\n` +
+                    `IMPORTANT: These are the most current numbers available from the Google Ads API.\n` +
+                    `They override any older data found in CSV files for this timeframe.\n` +
+                    `Use these numbers for current performance analysis.\n` +
+                    `=================================================\n`;
             }
 
             // Combine: Client Context + Base Context + Knowledge Base + Cross-Campaign Selection + Live Data

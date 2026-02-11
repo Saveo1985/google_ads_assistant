@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { RefreshCw } from 'lucide-react';
 import { useN8nTrigger } from '../../hooks/useN8nTrigger';
 import { toast } from 'react-hot-toast';
@@ -13,7 +13,12 @@ interface GoogleAdsSyncButtonProps {
 
 export const GoogleAdsSyncButton: React.FC<GoogleAdsSyncButtonProps> = ({ clientId, campaignId, lastSyncedAt }) => {
     const { triggerWorkflow, isLoading } = useN8nTrigger();
-    const [lastSync, setLastSync] = useState<string | null>(null);
+    const [lastSyncTime, setLastSyncTime] = useState<any>(lastSyncedAt);
+
+    // Sync state with prop
+    useEffect(() => {
+        setLastSyncTime(lastSyncedAt);
+    }, [lastSyncedAt]);
 
     const handleSync = async (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -47,7 +52,8 @@ export const GoogleAdsSyncButton: React.FC<GoogleAdsSyncButtonProps> = ({ client
                 const clientRef = doc(db, 'apps', '2h_web_solutions_google_ads_asssitant_v1', 'clients', clientId);
                 await updateDoc(clientRef, { lastSyncedAt: serverTimestamp() });
 
-                setLastSync(new Date().toLocaleTimeString());
+
+                setLastSyncTime(new Date());
                 toast.success("Google Ads Sync Complete", { id: toastId });
             } else {
                 throw new Error("No response from workflow");
@@ -72,15 +78,15 @@ export const GoogleAdsSyncButton: React.FC<GoogleAdsSyncButtonProps> = ({ client
                         : 'bg-[#B7EF02] hover:bg-[#a6d902] text-black shadow-sm hover:shadow-md'
                     }
       `}
-                title={lastSync ? `Last sync: ${lastSync}` : 'Sync with Google Ads'}
+                title={lastSyncTime ? `Last sync: ${lastSyncTime.toLocaleString()}` : 'Sync with Google Ads'}
             >
                 <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
                 <span>{isLoading ? 'Syncing...' : 'Sync Ads'}</span>
             </button>
             <div className="text-center mt-2">
                 <p className="text-[10px] text-gray-400 font-['Barlow']">
-                    {lastSyncedAt ?
-                        `Letzter Sync: ${new Intl.DateTimeFormat('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(lastSyncedAt.toDate ? lastSyncedAt.toDate() : new Date(lastSyncedAt))}`
+                    {lastSyncTime ?
+                        `Letzter Sync: ${new Intl.DateTimeFormat('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(lastSyncTime.toDate ? lastSyncTime.toDate() : new Date(lastSyncTime))}`
                         : "Noch nie synchronisiert"}
                 </p>
             </div>
