@@ -47,6 +47,7 @@ export default function CampaignWorkspace() {
     const [campaign, setCampaign] = useState<Campaign | null>(null);
     const [client, setClient] = useState<Client | null>(null);
     const [messages, setMessages] = useState<Message[]>([]);
+    const [performanceReport, setPerformanceReport] = useState<string | null>(null);
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
     const [showMemory, setShowMemory] = useState(false);
@@ -74,16 +75,26 @@ export default function CampaignWorkspace() {
             }
         });
 
-        // Fetch Client
         const unsubClient = onSnapshot(getAppDoc('clients', clientId), (doc) => {
             if (doc.exists()) {
                 setClient({ id: doc.id, ...doc.data() } as Client);
             }
         });
 
+        // 3. Fetch Performance Report (Subcollection 'knowledge_base', Doc 'performance_report')
+        const unsubReport = onSnapshot(getAppDoc(`clients/${clientId}/campaigns/${campaignId}/knowledge_base`, 'performance_report'), (doc) => {
+            if (doc.exists()) {
+                const data = doc.data();
+                setPerformanceReport(data.content || null);
+            } else {
+                setPerformanceReport(null);
+            }
+        });
+
         return () => {
             unsubCampaign();
             unsubClient();
+            unsubReport();
         };
     }, [clientId, campaignId, isEditing]);
 
@@ -355,6 +366,14 @@ WENN der User fragt "Wie läuft es?", beziehe dich IMMER auf diese Live-Werte un
             // Combine: Client Context + Base Context + Knowledge Base + Cross-Campaign Selection + Live Data
             // SYSTEM: FULL CONTEXT ENFORCED - NO TRUNCATION
             let combinedContext = `${clientContext}\n${liveContextInjection}\n${baseContext}\n\n${contextString}`;
+
+            if (performanceReport) {
+                combinedContext += `
+--- PERFORMANCE DATA (DAILY BREAKDOWN) ---
+${performanceReport}
+--- END DATA ---
+`;
+            }
 
             if (crossCampaignContext) {
                 combinedContext += `\n\n--- CROSS-CAMPAIGN KNOWLEDGE START ---\n${crossCampaignContext}\n--- CROSS-CAMPAIGN KNOWLEDGE END ---\nUse this knowledge to answer the current request if relevant.`;
