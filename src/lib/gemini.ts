@@ -30,7 +30,7 @@ export async function getGeminiResponse(
         // 1. Modell Initialisierung (Gemini 3 Flash Preview)
         const model = genAI.getGenerativeModel({
             model: MODEL_NAME,
-            systemInstruction: BRAIN_RULES.CORE + "\n\n" + (BRAIN_RULES[role] || "")
+            systemInstruction: BRAIN_RULES[role] || BRAIN_RULES.CORE
         });
 
         // 2. Prompt Zusammensetzung (Multimodal)
