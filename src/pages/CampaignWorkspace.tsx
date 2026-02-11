@@ -48,6 +48,7 @@ export default function CampaignWorkspace() {
     const [client, setClient] = useState<Client | null>(null);
     const [messages, setMessages] = useState<Message[]>([]);
     const [performanceReport, setPerformanceReport] = useState<string | null>(null);
+    const [searchTerms, setSearchTerms] = useState<string | null>(null);
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
     const [showMemory, setShowMemory] = useState(false);
@@ -97,10 +98,21 @@ export default function CampaignWorkspace() {
             }
         });
 
+        // 4. Fetch Search Terms (Subcollection 'knowledge_base', Doc 'search_terms')
+        const unsubSearchTerms = onSnapshot(getAppDoc(`clients/${clientId}/campaigns/${campaignId}/knowledge_base`, 'search_terms'), (doc) => {
+            if (doc.exists()) {
+                const data = doc.data();
+                setSearchTerms(data.content || null);
+            } else {
+                setSearchTerms(null);
+            }
+        });
+
         return () => {
             unsubCampaign();
             unsubClient();
             unsubReport();
+            unsubSearchTerms();
         };
     }, [clientId, campaignId, isEditing]);
 
@@ -328,7 +340,7 @@ export default function CampaignWorkspace() {
                 const liveConversions = Number(stats.conversions) || 0;
                 const liveCPA = liveConversions > 0 ? (liveCost / liveConversions).toFixed(2) : "0.00";
 
-                // 3. DAILY STATS TIMELINE (LAST 30 DAYS - ASCENDING)
+                // 3. DAILY STATS TIMELINE (LAST 30 DAYS - MARKDOWN TABLE)
                 let recentPerformanceString = "";
                 if (campaign.dailyStats && campaign.dailyStats.length > 0) {
                     // Sort ascending (oldest to newest)
@@ -336,9 +348,20 @@ export default function CampaignWorkspace() {
                         .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
                         .slice(-30); // Last 30 entries
 
-                    recentPerformanceString = sortedStats.map(stat =>
-                        `[${stat.date}]: Clicks=${stat.clicks}, Cost=${stat.cost_micros} (micros), Conv=${stat.conversions}`
-                    ).join('\n');
+                    // Format as Markdown Table
+                    recentPerformanceString = "| Date | Clicks | Cost (Micro) | Conversions |\n|---|---|---|---|\n" +
+                        sortedStats.map(stat =>
+                            `| ${stat.date} | ${stat.clicks} | ${stat.cost_micros} | ${stat.conversions} |`
+                        ).join('\n');
+                }
+
+                // 4. SEARCH TERMS CONTEXT
+                let searchTermsContext = "";
+                if (searchTerms) {
+                    searchTermsContext = `
+#### TOP SEARCH TERMS (Analyzed)
+${searchTerms}
+`;
                 }
 
                 // 4. DER OVERRIDE-TEXT
@@ -360,7 +383,11 @@ NUTZE FÜR AKTUELLE ANALYSEN DIESE LIVE-DATEN (Stand HEUTE):
 - Kampagnen-Status: ${campaign.status || 'Aktiv'}
 
 === RECENT DAILY PERFORMANCE (LAST 30 DAYS) ===
+=== RECENT DAILY PERFORMANCE (LAST 30 DAYS) ===
 ${recentPerformanceString}
+
+${searchTermsContext}
+
 (NOTE: Trust this live data over any CSV files for recent dates.)
 
 WENN der User nach einem bestimmten Datum fragt (z.B. "Wie war es gestern?" oder "Am 12.02."), NUTZE DIE DATEN AUS "RECENT DAILY PERFORMANCE".
