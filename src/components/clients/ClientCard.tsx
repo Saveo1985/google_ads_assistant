@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ExternalLink, Trash2, FolderOpen, ArrowRight, ChevronDown, ChevronUp } from 'lucide-react';
 import { getDocs } from 'firebase/firestore';
 import { getAppCollection, type Client } from '../../lib/db';
+import type { Campaign } from '../../types';
 import { useTranslation } from 'react-i18next';
 
 interface ClientCardProps {
@@ -13,7 +14,7 @@ interface ClientCardProps {
 export default function ClientCard({ client, onDelete }: ClientCardProps) {
     const { t } = useTranslation();
     const navigate = useNavigate();
-    const [campaigns, setCampaigns] = useState<any[]>([]);
+    const [campaigns, setCampaigns] = useState<Campaign[]>([]);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [loading, setLoading] = useState(true);
 
@@ -42,7 +43,7 @@ export default function ClientCard({ client, onDelete }: ClientCardProps) {
                 const campaignsList = snapshot.docs.map(doc => ({
                     id: doc.id,
                     ...doc.data()
-                }));
+                })) as Campaign[];
 
                 console.log(`Loaded ${campaignsList.length} campaigns for ${client.name}`, campaignsList);
                 setCampaigns(campaignsList);
@@ -127,6 +128,8 @@ export default function ClientCard({ client, onDelete }: ClientCardProps) {
                     }}
                     className={`flex items-center gap-2 text-gray-600 bg-gray-50 rounded-lg p-3 border border-gray-100 transition-colors ${campaigns.length > 0 ? 'hover:bg-[#B7EF02]/10 hover:border-[#B7EF02]/30 cursor-pointer' : 'opacity-70 cursor-default'
                         }`}
+                    role="button"
+                    tabIndex={0}
                 >
                     <FolderOpen size={18} className="text-gray-400 group-hover:text-[#B7EF02] transition-colors" />
                     <span className="font-['Barlow'] text-sm font-medium flex-1">{t('clients.table.campaigns')}</span>
