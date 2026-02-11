@@ -311,15 +311,17 @@ export default function CampaignWorkspace() {
                 const liveConversions = Number(stats.conversions) || 0;
                 const liveCPA = liveConversions > 0 ? (liveCost / liveConversions).toFixed(2) : "0.00";
 
-                // 3. DAILY STATS TIMELINE
-                let dailyStatsText = "";
+                // 3. DAILY STATS TIMELINE (LAST 30 DAYS - ASCENDING)
+                let recentPerformanceString = "";
                 if (campaign.dailyStats && campaign.dailyStats.length > 0) {
-                    // Sort descending (newest first)
-                    const sortedStats = [...campaign.dailyStats].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-                    dailyStatsText = `\n### DAILY PERFORMANCE HISTORY (LAST 30 DAYS):\n` +
-                        sortedStats.map(stat =>
-                            `DATE: ${stat.date} | CLICKS: ${stat.clicks} | COST: ${(stat.cost_micros / 1000000).toFixed(2)} | CONVERSIONS: ${stat.conversions}`
-                        ).join('\n');
+                    // Sort ascending (oldest to newest)
+                    const sortedStats = [...campaign.dailyStats]
+                        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+                        .slice(-30); // Last 30 entries
+
+                    recentPerformanceString = sortedStats.map(stat =>
+                        `[${stat.date}]: Clicks=${stat.clicks}, Cost=${stat.cost_micros} (micros), Conv=${stat.conversions}`
+                    ).join('\n');
                 }
 
                 // 4. DER OVERRIDE-TEXT
@@ -339,9 +341,12 @@ NUTZE FÜR AKTUELLE ANALYSEN DIESE LIVE-DATEN (Stand HEUTE):
 - Conversions (Total): ${liveConversions}
 - Aktueller CPA: ${liveCPA} €
 - Kampagnen-Status: ${campaign.status || 'Aktiv'}
-${dailyStatsText}
 
-WENN der User nach einem bestimmten Datum fragt (z.B. "Wie war es gestern?" oder "Am 12.02."), NUTZE DIE DATEN AUS "DAILY PERFORMANCE HISTORY".
+=== RECENT DAILY PERFORMANCE (LAST 30 DAYS) ===
+${recentPerformanceString}
+(NOTE: Trust this live data over any CSV files for recent dates.)
+
+WENN der User nach einem bestimmten Datum fragt (z.B. "Wie war es gestern?" oder "Am 12.02."), NUTZE DIE DATEN AUS "RECENT DAILY PERFORMANCE".
 WENN der User fragt "Wie läuft es?", beziehe dich IMMER auf diese Live-Werte und das Datum ${today}.
 ================================================================
 `;

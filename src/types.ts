@@ -34,9 +34,9 @@ export interface CampaignStats {
 
 export interface DailyStat {
     date: string;
-    clicks: number;
-    cost_micros: number;
-    conversions: number;
+    clicks: number | string;
+    cost_micros: number | string;
+    conversions: number | string;
 }
 
 export interface Campaign {
