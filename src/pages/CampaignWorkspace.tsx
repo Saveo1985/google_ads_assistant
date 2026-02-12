@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Send, Brain, Archive, Pencil, Check, X, Trash2, Image as ImageIcon } from 'lucide-react';
-import { onSnapshot, addDoc, query, orderBy, serverTimestamp, setDoc, getDocs, deleteDoc, updateDoc } from 'firebase/firestore';
+import { onSnapshot, addDoc, query, orderBy, serverTimestamp, setDoc, getDocs, deleteDoc, updateDoc, where, limit } from 'firebase/firestore';
 import { getAppDoc, getAppCollection, APP_ID } from '../lib/db';
 import { getGeminiResponse } from '../lib/gemini';
 import { GoogleAdsSyncButton } from '../components/campaigns/GoogleAdsSyncButton';
@@ -82,26 +82,40 @@ export default function CampaignWorkspace() {
             }
         });
 
-        // 3. Fetch Performance Report (Subcollection 'knowledge_base', Doc 'performance_report')
-        const unsubReport = onSnapshot(getAppDoc(`clients/${clientId}/campaigns/${campaignId}/knowledge_base`, 'performance_report'), (doc) => {
-            console.log("🔥 FIRESTORE DEBUG - Report Path:", doc.ref.path);
-            console.log("🔥 FIRESTORE DEBUG - Exists:", doc.exists());
+        // 3. Fetch Performance Report (Subcollection 'knowledge_base', Query by Type)
+        const reportQuery = query(
+            getAppCollection(`clients/${clientId}/campaigns/${campaignId}/knowledge_base`),
+            where('type', '==', 'google_ads_performance_report'),
+            orderBy('updatedAt', 'desc'),
+            limit(1)
+        );
 
-            if (doc.exists()) {
+        const unsubReport = onSnapshot(reportQuery, (snapshot) => {
+            console.log("🔥 FIRESTORE DEBUG - Searching for Report via Query...");
+
+            if (!snapshot.empty) {
+                const doc = snapshot.docs[0];
                 const data = doc.data();
+                console.log("🔥 FIRESTORE DEBUG - Report Found:", doc.id);
                 console.log("🔥 FIRESTORE DEBUG - Content Length:", data.content?.length);
-                console.log("🔥 FIRESTORE DEBUG - Preview:", data.content?.substring(0, 100));
                 setPerformanceReport(data.content || null);
             } else {
-                console.log("❌ FIRESTORE DEBUG - Report NOT found.");
+                console.log("❌ FIRESTORE DEBUG - Report NOT found via Query.");
                 setPerformanceReport(null);
             }
         });
 
-        // 4. Fetch Search Terms (Subcollection 'knowledge_base', Doc 'search_terms')
-        const unsubSearchTerms = onSnapshot(getAppDoc(`clients/${clientId}/campaigns/${campaignId}/knowledge_base`, 'search_terms'), (doc) => {
-            if (doc.exists()) {
-                const data = doc.data();
+        // 4. Fetch Search Terms (Subcollection 'knowledge_base', Query by Type)
+        const searchTermsQuery = query(
+            getAppCollection(`clients/${clientId}/campaigns/${campaignId}/knowledge_base`),
+            where('type', '==', 'google_ads_search_terms'),
+            orderBy('updatedAt', 'desc'),
+            limit(1)
+        );
+
+        const unsubSearchTerms = onSnapshot(searchTermsQuery, (snapshot) => {
+            if (!snapshot.empty) {
+                const data = snapshot.docs[0].data();
                 setSearchTerms(data.content || null);
             } else {
                 setSearchTerms(null);
