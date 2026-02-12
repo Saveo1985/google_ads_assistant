@@ -339,13 +339,7 @@ export default function CampaignWorkspace() {
             // --- LIVE CAMPAIGN DATA INJECTION ---
             let liveContextInjection = "";
             if (campaign) {
-                // 1. HEUTIGES DATUM
-                const today = new Date().toLocaleDateString('de-DE', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                });
+
 
                 // 2. LIVE STATS AUS FIREBASE (Fallback auf 0 falls leer)
                 const stats = campaign.stats || {} as CampaignStats;
@@ -354,21 +348,34 @@ export default function CampaignWorkspace() {
                 const liveConversions = Number(stats.conversions) || 0;
                 const liveCPA = liveConversions > 0 ? (liveCost / liveConversions).toFixed(2) : "0.00";
 
-                // 3. DAILY STATS TIMELINE (LAST 30 DAYS - MARKDOWN TABLE)
-                let recentPerformanceString = "";
+                // 3. DAILY STATS TIMELINE (LAST 30 DAYS - LIST)
+                let dailyTrendList = "";
                 if (campaign.dailyStats && campaign.dailyStats.length > 0) {
-                    // Sort ascending (oldest to newest)
+                    // Sort descending (newest first)
                     const sortedStats = [...campaign.dailyStats]
-                        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-                        .slice(-30); // Last 30 entries
+                        .sort((a, b) => {
+                            // Handle Firestore Timestamp or String
+                            // @ts-ignore - Timestamp check
+                            const dateA = a.date?.toDate ? a.date.toDate().getTime() : new Date(a.date).getTime();
+                            // @ts-ignore
+                            const dateB = b.date?.toDate ? b.date.toDate().getTime() : new Date(b.date).getTime();
+                            return dateB - dateA;
+                        })
+                        .slice(0, 30); // Last 30 entries
 
-                    // Format as Markdown Table (DD.MM.YYYY, Cost in EUR)
-                    recentPerformanceString = "| Date | Clicks | Cost (€) | Conversions |\n|---|---|---|---|\n" +
-                        sortedStats.map(stat => {
-                            const date = new Date(stat.date).toLocaleDateString('de-DE'); // DD.MM.YYYY
-                            const cost = (Number(stat.cost_micros) / 1000000).toFixed(2);
-                            return `| ${date} | ${stat.clicks} | ${cost} € | ${stat.conversions} |`;
-                        }).join('\n');
+                    // Format as List
+                    dailyTrendList = sortedStats.map(stat => {
+                        let dateStr = "";
+                        // @ts-ignore
+                        if (stat.date?.toDate) {
+                            // @ts-ignore
+                            dateStr = stat.date.toDate().toLocaleDateString('de-DE');
+                        } else {
+                            dateStr = new Date(stat.date).toLocaleDateString('de-DE');
+                        }
+                        const cost = (Number(stat.cost_micros) / 1000000).toFixed(2);
+                        return `- ${dateStr}: ${stat.clicks} Clicks, ${cost}€, ${stat.conversions} Conv`;
+                    }).join('\n');
                 }
 
                 // 4. SEARCH TERMS CONTEXT
@@ -383,30 +390,16 @@ ${searchTerms}
                 // 4. DER OVERRIDE-TEXT
                 liveContextInjection = `
 ================================================================
-### LIVE GOOGLE ADS DATA (Last 30 Days)
+### 🔴 LIVE GOOGLE ADS DATA (Source: API, Last 30 Days)
 
-HEUTIGES DATUM: ${today}
+**Totals**: ${liveClicks} Clicks | ${liveCost}€ | ${liveConversions} Conv | CPA: ${liveCPA}€
 
-ACHTUNG - KRITISCHE ANWEISUNG ZUR DATENQUELLE:
-Die angehängten CSV-Dateien (Memory) sind Historie und enden möglicherweise in der Vergangenheit.
-IGNORIERE das Enddatum der Datei für "Status Quo"-Fragen.
-
-NUTZE FÜR AKTUELLE ANALYSEN DIESE LIVE-DATEN (Stand HEUTE):
-- Klicks (Total): ${liveClicks}
-- Kosten (Total): ${liveCost} €
-- Conversions (Total): ${liveConversions}
-- Aktueller CPA: ${liveCPA} €
-- Kampagnen-Status: ${campaign.status || 'Aktiv'}
-
-#### Daily Performance Breakdown
-${recentPerformanceString}
+**Daily Trend**:
+${dailyTrendList || "(No daily data available)"}
 
 ${searchTermsContext}
 
-(NOTE: Trust this live data over any CSV files for recent dates.)
-
-WENN der User nach einem bestimmten Datum fragt (z.B. "Wie war es gestern?" oder "Am 12.02."), NUTZE DIE DATEN AUS "Live Google Ads Data".
-WENN der User fragt "Wie läuft es?", beziehe dich IMMER auf diese Live-Werte und das Datum ${today}.
+(NOTE: Use this LIVE DATA table for any questions about recent performance. It is more accurate than the CSV.)
 ================================================================
 `;
             }
@@ -540,13 +533,14 @@ ${performanceReport}
                                 )}
 
                                 {/* Performance Data Indicator */}
-                                {performanceReport ? (
-                                    <div className="flex items-center gap-1.5 ml-2 cursor-help" title="Data Report Loaded">
-                                        <span className="w-2 h-2 bg-emerald-500 rounded-full"></span>
-                                        <span className="text-[10px] text-slate-500 uppercase tracking-wider">Data Ready</span>
+                                {/* Performance Data Indicator */}
+                                {(campaign?.dailyStats?.length || 0) > 0 || performanceReport ? (
+                                    <div className="flex items-center gap-1.5 ml-2 cursor-help" title="Live Google Ads Data Connected">
+                                        <span className="w-2 h-2 bg-[#B7EF02] rounded-full animate-pulse"></span>
+                                        <span className="text-[10px] text-gray-900 font-bold uppercase tracking-wider">Live Data</span>
                                     </div>
                                 ) : (
-                                    <div className="flex items-center gap-1.5 ml-2 cursor-help" title="Data Report Missing">
+                                    <div className="flex items-center gap-1.5 ml-2 cursor-help" title="No Live Data Found">
                                         <span className="w-2 h-2 bg-red-400 rounded-full"></span>
                                         <span className="text-[10px] text-slate-400 uppercase tracking-wider">No Data</span>
                                     </div>
