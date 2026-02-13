@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { FolderOpen, Calendar, Trash2, Check, BarChart2 } from 'lucide-react';
 import { CampaignPerformanceModal } from './CampaignPerformanceModal';
+import { GoogleAdsSyncButton } from './GoogleAdsSyncButton';
 
 // Using types from previous context or defining locally if needed
 type CampaignStatus = 'active' | 'paused' | 'archived';
@@ -89,12 +90,15 @@ export const CampaignCard: React.FC<CampaignCardProps> = ({ campaign, onNavigate
                         </div>
                     </div>
                     <div className="text-right">
-                        <div className="flex items-center gap-1 text-xs text-gray-400 mb-1">
+                        <div className="flex items-center gap-1 text-xs text-gray-400 mb-1 justify-end">
                             <Calendar size={12} />
                             <span>Created {campaign.createdAt?.toDate ? campaign.createdAt.toDate().toLocaleDateString() : 'N/A'}</span>
                         </div>
 
                         <div className="flex items-center justify-end gap-2 mt-2">
+                            {/* Sync Button */}
+                            <GoogleAdsSyncButton clientId={window.location.pathname.split('/')[2]} campaignId={campaign.id} />
+
                             {/* Insights Button */}
                             <button
                                 onClick={handleInsightsClick}

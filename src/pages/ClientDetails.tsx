@@ -6,7 +6,7 @@ import { getAppDoc, getAppCollection } from '../lib/db';
 import { updateCampaignStatus, type CampaignStatus } from '../lib/firebase/campaigns';
 import CreateCampaignModal from '../components/campaigns/CreateCampaignModal';
 import { DeleteConfirmationModal } from '../components/ui/DeleteConfirmationModal';
-import SmartBusinessCard from '../components/clients/SmartBusinessCard';
+// import SmartBusinessCard from '../components/clients/SmartBusinessCard'; // Removed
 
 import ClientEconomicsSimulator from '../components/clients/ClientEconomicsSimulator';
 import { CampaignCard } from '../components/campaigns/CampaignCard';
@@ -142,8 +142,7 @@ export default function ClientDetails() {
                 </div>
             </div>
 
-            {/* AI Business Intelligence Card */}
-            <SmartBusinessCard client={client} />
+            {/* AI Business Intelligence Card Removed */}
 
             {/* Economics Simulator */}
             <ClientEconomicsSimulator

@@ -4,7 +4,7 @@ import { ArrowLeft, Send, Brain, Archive, Pencil, Check, X, Trash2, Image as Ima
 import { onSnapshot, addDoc, query, orderBy, serverTimestamp, setDoc, getDocs, deleteDoc, updateDoc, where, limit } from 'firebase/firestore';
 import { getAppDoc, getAppCollection, APP_ID } from '../lib/db';
 import { getGeminiResponse } from '../lib/gemini';
-import { GoogleAdsSyncButton } from '../components/campaigns/GoogleAdsSyncButton';
+// import { GoogleAdsSyncButton } from '../components/campaigns/GoogleAdsSyncButton'; // Removed
 import CampaignMemory from '../components/CampaignMemory';
 import CrossCampaignSelector from '../components/campaigns/CrossCampaignSelector';
 import type { Campaign, Client, CampaignStats, Message } from '../types';
@@ -531,25 +531,10 @@ ${performanceReport}
                                         Brain: {client.name}
                                     </span>
                                 )}
-
-                                {/* Performance Data Indicator */}
-                                {/* Performance Data Indicator */}
-                                {(campaign?.dailyStats?.length || 0) > 0 || performanceReport ? (
-                                    <div className="flex items-center gap-1.5 ml-2 cursor-help" title="Live Google Ads Data Connected">
-                                        <span className="w-2 h-2 bg-[#B7EF02] rounded-full animate-pulse"></span>
-                                        <span className="text-[10px] text-gray-900 font-bold uppercase tracking-wider">Live Data</span>
-                                    </div>
-                                ) : (
-                                    <div className="flex items-center gap-1.5 ml-2 cursor-help" title="No Live Data Found">
-                                        <span className="w-2 h-2 bg-red-400 rounded-full"></span>
-                                        <span className="text-[10px] text-slate-400 uppercase tracking-wider">No Data</span>
-                                    </div>
-                                )}
                             </div>
                         </div>
                     </div>
                     <div className="flex gap-2">
-                        <GoogleAdsSyncButton clientId={clientId!} campaignId={campaignId} />
                         <button
                             onClick={handleSmartArchive}
                             className="p-2 rounded-lg hover:bg-gray-200 text-gray-500 hover:text-[#B7EF02] transition-colors"
