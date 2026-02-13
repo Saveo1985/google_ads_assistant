@@ -4,7 +4,7 @@ import { ArrowLeft, Send, Brain, Archive, Pencil, Check, X, Trash2, Image as Ima
 import { onSnapshot, addDoc, query, orderBy, serverTimestamp, setDoc, getDocs, deleteDoc, updateDoc, where, limit } from 'firebase/firestore';
 import { getAppDoc, getAppCollection, APP_ID } from '../lib/db';
 import { getGeminiResponse } from '../lib/gemini';
-// import { GoogleAdsSyncButton } from '../components/campaigns/GoogleAdsSyncButton'; // Removed
+import { GoogleAdsSyncButton } from '../components/campaigns/GoogleAdsSyncButton';
 import CampaignMemory from '../components/CampaignMemory';
 import CrossCampaignSelector from '../components/campaigns/CrossCampaignSelector';
 import type { Campaign, Client, CampaignStats, Message } from '../types';
@@ -535,6 +535,7 @@ ${performanceReport}
                         </div>
                     </div>
                     <div className="flex gap-2">
+                        <GoogleAdsSyncButton clientId={clientId!} campaignId={campaignId} />
                         <button
                             onClick={handleSmartArchive}
                             className="p-2 rounded-lg hover:bg-gray-200 text-gray-500 hover:text-[#B7EF02] transition-colors"

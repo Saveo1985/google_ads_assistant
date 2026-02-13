@@ -10,7 +10,7 @@ import { DeleteConfirmationModal } from '../components/ui/DeleteConfirmationModa
 
 import ClientEconomicsSimulator from '../components/clients/ClientEconomicsSimulator';
 import { CampaignCard } from '../components/campaigns/CampaignCard';
-import { GoogleAdsSyncButton } from '../components/campaigns/GoogleAdsSyncButton';
+// import { GoogleAdsSyncButton } from '../components/campaigns/GoogleAdsSyncButton'; // Removed
 
 // Helper for Status Colors & Icons
 const STATUS_CONFIG: Record<string, { label: string, color: string, icon: any, bg: string }> = {
@@ -130,7 +130,7 @@ export default function ClientDetails() {
                                 {showArchived ? 'Hide Archived' : `Show Archived (${archivedCount})`}
                             </button>
                         )}
-                        <GoogleAdsSyncButton clientId={clientId!} lastSyncedAt={client.lastSyncedAt} />
+                        {/* Sync Button Removed here */}
                         <button
                             onClick={() => setShowCreateModal(true)}
                             className="flex items-center gap-2 bg-[#101010] text-[#B7EF02] px-5 py-2.5 rounded-lg hover:bg-gray-900 transition-colors font-['Barlow'] font-medium"
