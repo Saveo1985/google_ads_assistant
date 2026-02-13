@@ -119,8 +119,8 @@ export default function CreateCampaignModal({ clientId, onClose }: CreateCampaig
                     .replace(/ö/g, 'oe')
                     .replace(/ü/g, 'ue')
                     .replace(/ß/g, 'ss')
-                    .replace(/\s+/g, '-')     // Space -> Hyphen
-                    .replace(/[^a-z0-9-]/g, ''); // Keep only alphanumeric and hyphen
+                    .replace(/[^a-z0-9]+/g, '-') // Replace special chars & spaces with hyphen
+                    .replace(/^-+|-+$/g, '');    // Remove leading/trailing hyphens
             };
 
             const campaignId = generateCampaignId(basicInfo.name);
