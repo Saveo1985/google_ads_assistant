@@ -51,9 +51,9 @@
         "add_service": "Service hinzufügen",
         "delete_service": "Löschen",
         "inputs": {
-            "aov": "Ø Auftragswert (Service)",
+            "aov": "Ø Auftragswert",
             "target_roas": "Ziel ROAS",
-            "margin": "Marge (in %)",
+            "margin": "Marge (%)",
             "tax": "Steuersatz (%)",
             "returns": "Retourenquote (%)"
         },

@@ -22,8 +22,13 @@ export default function ClientEconomicsSimulator({ clientId, initialData, initia
     // Initialization Logic
     useEffect(() => {
         if (initialServiceLines && initialServiceLines.length > 0) {
-            setServiceLines(initialServiceLines);
-            setActiveServiceId(initialServiceLines[0].id);
+            // Data Migration: Ensure 'margin' exists for legacy service lines that only had 'cogs'
+            const migratedLines = initialServiceLines.map(line => ({
+                ...line,
+                margin: line.margin !== undefined ? line.margin : ((line as any).cogs !== undefined ? (100 - (line as any).cogs) : 50)
+            }));
+            setServiceLines(migratedLines);
+            setActiveServiceId(migratedLines[0].id);
         } else {
             // Migration / Default
             const defaultService: ServiceLineEconomics = {

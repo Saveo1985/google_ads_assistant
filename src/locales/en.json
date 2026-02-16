@@ -51,7 +51,7 @@
         "add_service": "Add Service",
         "delete_service": "Delete",
         "inputs": {
-            "aov": "Avg. Order Value (Service)",
+            "aov": "Avg. Order Value",
             "target_roas": "Target ROAS",
             "margin": "Margin (%)",
             "tax": "Tax Rate (%)",
