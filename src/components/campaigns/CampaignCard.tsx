@@ -21,9 +21,11 @@ interface CampaignCardProps {
     onDelete: (e: React.MouseEvent, campaign: Campaign) => void;
     onChangeStatus: (e: React.MouseEvent, id: string, status: CampaignStatus) => void;
     statusConfig: Record<string, { label: string, color: string, icon: any, bg: string }>;
+    onClick?: (e: React.MouseEvent) => void;
+    clientId: string;
 }
 
-export const CampaignCard: React.FC<CampaignCardProps> = ({ campaign, onNavigate, onDelete, onChangeStatus, statusConfig }) => {
+export const CampaignCard: React.FC<CampaignCardProps> = ({ campaign, onNavigate, onDelete, onChangeStatus, statusConfig, clientId }) => {
     const [showPerformance, setShowPerformance] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -97,7 +99,7 @@ export const CampaignCard: React.FC<CampaignCardProps> = ({ campaign, onNavigate
 
                         <div className="flex items-center justify-end gap-2 mt-2">
                             {/* Sync Button */}
-                            <GoogleAdsSyncButton clientId={window.location.pathname.split('/')[2]} campaignId={campaign.id} />
+                            <GoogleAdsSyncButton clientId={clientId} campaignId={campaign.id} />
 
                             {/* Insights Button */}
                             <button

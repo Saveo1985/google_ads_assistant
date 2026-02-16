@@ -6,11 +6,8 @@ import { getAppDoc, getAppCollection } from '../lib/db';
 import { updateCampaignStatus, type CampaignStatus } from '../lib/firebase/campaigns';
 import CreateCampaignModal from '../components/campaigns/CreateCampaignModal';
 import { DeleteConfirmationModal } from '../components/ui/DeleteConfirmationModal';
-// import SmartBusinessCard from '../components/clients/SmartBusinessCard'; // Removed
-
 import ClientEconomicsSimulator from '../components/clients/ClientEconomicsSimulator';
 import { CampaignCard } from '../components/campaigns/CampaignCard';
-// import { GoogleAdsSyncButton } from '../components/campaigns/GoogleAdsSyncButton'; // Removed
 
 // Helper for Status Colors & Icons
 const STATUS_CONFIG: Record<string, { label: string, color: string, icon: any, bg: string }> = {
@@ -130,7 +127,7 @@ export default function ClientDetails() {
                                 {showArchived ? 'Hide Archived' : `Show Archived (${archivedCount})`}
                             </button>
                         )}
-                        {/* Sync Button Removed here */}
+                        {/* Sync Button Removed */}
                         <button
                             onClick={() => setShowCreateModal(true)}
                             className="flex items-center gap-2 bg-[#101010] text-[#B7EF02] px-5 py-2.5 rounded-lg hover:bg-gray-900 transition-colors font-['Barlow'] font-medium"
@@ -167,6 +164,7 @@ export default function ClientDetails() {
                         <CampaignCard
                             key={camp.id}
                             campaign={camp}
+                            clientId={clientId!}
                             onNavigate={(id) => navigate(`/clients/${clientId}/campaigns/${id}`)}
                             onDelete={handleDeleteClick}
                             onChangeStatus={changeStatus}
