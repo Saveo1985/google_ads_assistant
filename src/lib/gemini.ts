@@ -109,9 +109,9 @@ export async function analyzeBrand(name: string, url: string, scrapedData?: stri
     STRICT REALITY HIERARCHY:
     1. Scraped Content (Highest Priority) - IF AVAILABLE, YOU MUST USE THIS. IGNORE INTERNAL KNOWLEDGE.
     2. User Hints (Overrides everything if provided)
-    3. Internal Knowledge (ONLY if 1 and 2 are empty/missing)
+    3. Internal AI Knowledge (last resort)
 
-    CRITICAL RULE: If scrapedContent is provided, you MUST ignore any previous training data about this domain.
+    CRITICAL RULE: If Scraped Content is provided, YOU MUST IGNORE all prior knowledge about the domain.
     If the content says 'Service', do not assume 'E-Commerce'.
     DO NOT HALLUCINATE.
     `;
