@@ -373,7 +373,7 @@ export default function CampaignWorkspace() {
                         } else {
                             dateStr = new Date(stat.date).toLocaleDateString('de-DE');
                         }
-                        const cost = (Number(stat.cost_micros) / 1000000).toFixed(2);
+                        const cost = (Number(stat.cost) / 1000000).toFixed(2);
                         return `- ${dateStr}: ${stat.clicks} Clicks, ${cost}€, ${stat.conversions} Conv`;
                     }).join('\n');
                 }
@@ -400,6 +400,7 @@ ${dailyTrendList || "(No daily data available)"}
 ${searchTermsContext}
 
 (NOTE: Use this LIVE DATA table for any questions about recent performance. It is more accurate than the CSV.)
+Analysiere Trends in den dailyStats. Achte auf Ausreißer beim CPC oder Conversion-Einbrüche über die Zeit.
 ================================================================
 `;
             }

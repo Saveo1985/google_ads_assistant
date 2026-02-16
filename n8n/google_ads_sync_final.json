@@ -35,28 +35,10 @@
         },
         {
             "parameters": {
-                "operation": "get",
+                "operation": "search",
                 "resource": "campaign",
-                "limit": 100,
-                "returnAll": true,
-                "filters": {
-                    "status": [
-                        "ENABLED",
-                        "PAUSED"
-                    ]
-                },
-                "options": {
-                    "fields": [
-                        "id",
-                        "name",
-                        "status",
-                        "metrics.clicks",
-                        "metrics.impressions",
-                        "metrics.cost_micros",
-                        "metrics.conversions",
-                        "metrics.ctr"
-                    ]
-                }
+                "query": "SELECT segments.date, campaign.name, campaign.id, metrics.clicks, metrics.cost_micros, metrics.conversions, metrics.ctr, metrics.average_cpc FROM campaign WHERE segments.date DURING LAST_30_DAYS",
+                "limit": 1000
             },
             "name": "Fetch Campaigns",
             "type": "n8n-nodes-base.googleAds",
@@ -74,21 +56,56 @@
         },
         {
             "parameters": {
+                "aggregate": "aggregateAllItemData",
+                "destinationFieldName": "dailyStats",
+                "fieldsToAggregate": {
+                    "field": [
+                        {
+                            "fromField": "metrics.clicks",
+                            "toField": "clicks"
+                        },
+                        {
+                            "fromField": "metrics.cost_micros",
+                            "toField": "cost"
+                        },
+                        {
+                            "fromField": "metrics.conversions",
+                            "toField": "conversions"
+                        },
+                        {
+                            "fromField": "segments.date",
+                            "toField": "date"
+                        }
+                    ]
+                },
+                "groupBy": {
+                    "field": [
+                        {
+                            "fromField": "campaign.id"
+                        }
+                    ]
+                }
+            },
+            "name": "Aggregate Daily Stats",
+            "type": "n8n-nodes-base.aggregate",
+            "typeVersion": 1,
+            "position": [
+                850,
+                300
+            ]
+        },
+        {
+            "parameters": {
                 "authentication": "firebase",
                 "operation": "update",
                 "firestoreCollection": "apps/2h_web_solutions_google_ads_asssitant_v1/clients/{{ $('Webhook').item.json.body.clientId }}/campaigns",
-                "documentId": "={{ $json.id }}",
+                "documentId": "={{ $json.campaign.id }}",
                 "columns": {
                     "mappingMode": "defineBelow",
                     "value": {
-                        "stats": {
-                            "clicks": "={{ $json.metrics.clicks }}",
-                            "impressions": "={{ $json.metrics.impressions }}",
-                            "cost": "={{ $json.metrics.cost_micros / 1000000 }}",
-                            "conversions": "={{ $json.metrics.conversions }}",
-                            "lastUpdated": "={{ new Date().toISOString() }}"
-                        },
-                        "status": "={{ $json.status }}"
+                        "dailyStats": "={{ JSON.stringify($json.dailyStats) }}",
+                        "lastSync": "={{ new Date().toISOString() }}",
+                        "status": "synced"
                     }
                 }
             },
@@ -96,7 +113,7 @@
             "type": "n8n-nodes-base.googleFirebaseFirestore",
             "typeVersion": 1,
             "position": [
-                850,
+                1050,
                 300
             ]
         },
@@ -110,7 +127,7 @@
             "type": "n8n-nodes-base.respondToWebhook",
             "typeVersion": 1,
             "position": [
-                1050,
+                1250,
                 300
             ]
         }
@@ -139,6 +156,17 @@
             ]
         },
         "Fetch Campaigns": {
+            "main": [
+                [
+                    {
+                        "node": "Aggregate Daily Stats",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Aggregate Daily Stats": {
             "main": [
                 [
                     {
