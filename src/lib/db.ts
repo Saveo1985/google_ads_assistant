@@ -24,14 +24,13 @@ export interface UnitEconomics { // @deprecated: Use ServiceLineEconomics
 
 export interface ServiceLineEconomics {
     id: string;           // UUID or Timestamp
-    name: string;         // e.g. "Lasertag", "Pixel Games"
+    name: string;         // e.g. "Services", "Consulting"
     currency: string;     // e.g. "EUR"
-    aov: number;          // Average Order Value
+    aov: number;          // Average Order Value / Lead Value
     targetRoas: number;   // Target ROAS
     taxRate: number;      // Tax Rate %
     returnRate: number;   // Return Rate %
-    cogs: number;         // COGS %
-    fulfillmentCost: number; // Absolute value
+    margin: number;       // Margin % (Gross Profit Margin)
 }
 
 export interface Client {

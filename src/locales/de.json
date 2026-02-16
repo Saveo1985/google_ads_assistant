@@ -51,11 +51,10 @@
         "add_service": "Service hinzufügen",
         "delete_service": "Löschen",
         "inputs": {
-            "aov": "Ø Warenkorbwert (Netto)",
+            "aov": "Ø Auftragswert (Service)",
             "target_roas": "Ziel ROAS",
-            "margin": "Marge / Handelsspanne (%)",
+            "margin": "Marge (in %)",
             "tax": "Steuersatz (%)",
-            "fulfillment": "Versand & Handling",
             "returns": "Retourenquote (%)"
         },
         "kpis": {

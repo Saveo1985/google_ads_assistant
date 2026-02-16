@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, PlayCircle, PauseCircle, Archive as ArchiveIcon, Filter } from 'lucide-react';
+import { ArrowLeft, Plus, PlayCircle, PauseCircle, Archive as ArchiveIcon, Filter, Lightbulb, Target, Factory } from 'lucide-react';
 import { onSnapshot, query, orderBy, deleteDoc } from 'firebase/firestore';
 import { getAppDoc, getAppCollection } from '../lib/db';
 import { updateCampaignStatus, type CampaignStatus } from '../lib/firebase/campaigns';
@@ -139,7 +139,49 @@ export default function ClientDetails() {
                 </div>
             </div>
 
-            {/* AI Business Intelligence Card Removed */}
+
+            {/* AI Business Intelligence Context */}
+            <div className="bg-white border-l-4 border-[#B7EF02] shadow-sm rounded-r-xl p-6 mb-8">
+                <div className="flex items-center gap-2 mb-4">
+                    <Lightbulb className="text-[#B7EF02]" size={20} />
+                    <h2 className="text-lg font-['Federo'] text-gray-900">Strategic Context & AI Memory</h2>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 font-['Barlow']">
+                    <div>
+                        <div className="flex items-start gap-3 mb-4">
+                            <Factory className="text-gray-400 mt-1" size={16} />
+                            <div>
+                                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Industry / Niche</p>
+                                <p className="text-gray-800">{client.industry || "Not specified"}</p>
+                            </div>
+                        </div>
+
+                        <div className="flex items-start gap-3">
+                            <div className="mt-1"><span className="text-gray-400 text-xs">📝</span></div>
+                            <div>
+                                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Business Description</p>
+                                <p className="text-gray-600 text-sm leading-relaxed">
+                                    {client.description || "No description available."}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div className="flex items-start gap-3">
+                            <Target className="text-gray-400 mt-1" size={16} />
+                            <div>
+                                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Global Goals & KPIs</p>
+                                <p className="text-gray-600 text-sm leading-relaxed whitespace-pre-wrap">
+                                    {client.goals || "No specific goals defined."}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
 
             {/* Economics Simulator */}
             <ClientEconomicsSimulator

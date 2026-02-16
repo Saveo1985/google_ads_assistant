@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calculator, Save, TrendingUp, DollarSign, Percent, Package, RefreshCw, Plus, Trash2, Layers } from 'lucide-react';
+import { Calculator, Save, TrendingUp, DollarSign, Percent, RefreshCw, Plus, Trash2, Layers } from 'lucide-react';
 import { updateDoc } from 'firebase/firestore';
 import { getAppDoc, type UnitEconomics, type ServiceLineEconomics } from '../../lib/db';
 import toast from 'react-hot-toast';
@@ -28,14 +28,13 @@ export default function ClientEconomicsSimulator({ clientId, initialData, initia
             // Migration / Default
             const defaultService: ServiceLineEconomics = {
                 id: uuidv4(),
-                name: 'General',
+                name: 'Service',
                 currency: 'EUR',
-                aov: initialData?.aov || 100,
+                aov: initialData?.aov || 500,
                 targetRoas: initialData?.targetRoas || 4.0,
                 taxRate: initialData?.taxRate || 19,
-                returnRate: initialData?.returnRate || 10,
-                cogs: initialData?.cogs || 30,
-                fulfillmentCost: initialData?.fulfillmentCost || 5
+                returnRate: initialData?.returnRate || 0,
+                margin: initialData?.cogs ? (100 - initialData.cogs) : 50, // Best effort migration if cogs existed
             };
             setServiceLines([defaultService]);
             setActiveServiceId(defaultService.id);
@@ -48,16 +47,21 @@ export default function ClientEconomicsSimulator({ clientId, initialData, initia
     const metrics = React.useMemo(() => {
         if (!activeService) return { netRevenue: 0, grossProfit: 0, adSpend: 0, netProfit: 0, breakEvenRoas: 0, breakEvenCpa: 0 };
 
-        const { aov, targetRoas, taxRate, returnRate, cogs, fulfillmentCost } = activeService;
+        const { aov, targetRoas, margin } = activeService;
 
-        const netRevenue = aov * (1 - taxRate / 100) * (1 - returnRate / 100);
-        const grossProfit = netRevenue * (1 - cogs / 100) - fulfillmentCost;
+        // Service Business Logic:
+        // Gross Profit = AOV * Margin %
+        const grossProfit = aov * (margin / 100);
+
         const adSpend = targetRoas > 0 ? aov / targetRoas : 0;
         const netProfit = grossProfit - adSpend;
+
+        // Break Even ROAS = AOV / Gross Profit
+        // Simplified: 1 / (Margin / 100)
         const breakEvenRoas = grossProfit > 0 ? aov / grossProfit : 999;
         const breakEvenCpa = grossProfit;
 
-        return { netRevenue, grossProfit, adSpend, netProfit, breakEvenRoas, breakEvenCpa };
+        return { netRevenue: aov, grossProfit, adSpend, netProfit, breakEvenRoas, breakEvenCpa };
     }, [activeService]);
 
 
@@ -81,12 +85,11 @@ export default function ClientEconomicsSimulator({ clientId, initialData, initia
             id: uuidv4(),
             name,
             currency: 'EUR',
-            aov: 100,
+            aov: 500,
             targetRoas: 4.0,
             taxRate: 19,
             returnRate: 0,
-            cogs: 0,
-            fulfillmentCost: 0
+            margin: 50,
         };
 
         setServiceLines([...serviceLines, newService]);
@@ -231,21 +234,14 @@ export default function ClientEconomicsSimulator({ clientId, initialData, initia
                     </div>
 
                     <div>
-                        <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">Product Costs</label>
+                        <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">Profit Structure</label>
                         <div className="grid grid-cols-2 gap-4">
                             <InputGroup
                                 label={t('economics.inputs.margin')}
                                 icon={<Percent size={14} />}
-                                value={activeService.cogs}
-                                onChange={(v) => handleChange('cogs', v)}
+                                value={activeService.margin}
+                                onChange={(v) => handleChange('margin', v)}
                                 suffix="%"
-                            />
-                            <InputGroup
-                                label={t('economics.inputs.fulfillment')}
-                                icon={<Package size={14} />}
-                                value={activeService.fulfillmentCost}
-                                onChange={(v) => handleChange('fulfillmentCost', v)}
-                                suffix="€"
                             />
                         </div>
                     </div>
@@ -279,7 +275,7 @@ export default function ClientEconomicsSimulator({ clientId, initialData, initia
                             </div>
                             <div className="flex gap-4 text-xs text-gray-500 mt-3 pt-3 border-t border-gray-800">
                                 <div>
-                                    <span className="block text-gray-400">Net Rev</span>
+                                    <span className="block text-gray-400">Revenue</span>
                                     €{metrics.netRevenue.toFixed(2)}
                                 </div>
                                 <div>

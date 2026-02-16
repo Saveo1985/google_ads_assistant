@@ -51,11 +51,10 @@
         "add_service": "Add Service",
         "delete_service": "Delete",
         "inputs": {
-            "aov": "Avg. Order Value (Net)",
+            "aov": "Avg. Order Value (Service)",
             "target_roas": "Target ROAS",
             "margin": "Margin (%)",
             "tax": "Tax Rate (%)",
-            "fulfillment": "Shipping & Handling",
             "returns": "Return Rate (%)"
         },
         "kpis": {
