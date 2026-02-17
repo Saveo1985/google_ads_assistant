@@ -1,0 +1,104 @@
+{
+    "name": "Universal Web Scraper Google Ads Assistant App",
+    "nodes": [
+        {
+            "parameters": {
+                "authentication": "none",
+                "httpMethod": "POST",
+                "path": "scrape",
+                "responseMode": "responseNode"
+            },
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 1,
+            "position": [
+                0,
+                0
+            ],
+            "id": "7cc93739-8010-4579-a1e2-384fa4b98bf6",
+            "name": "Webhook"
+        },
+        {
+            "parameters": {
+                "allowUnauthorizedCerts": true,
+                "method": "GET",
+                "options": {
+                    "redirects": {
+                        "maxRedirects": 5
+                    }
+                },
+                "url": "={{ $json.body.url }}"
+            },
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.1,
+            "position": [
+                220,
+                0
+            ],
+            "id": "19396f28-4038-43c9-b241-269ff1f06565",
+            "name": "HTTP Request"
+        },
+        {
+            "parameters": {
+                "jsCode": "const html = $input.all()[0].json.data;\n// Remove scripts and styles\nlet text = html.replace(/<script[^>]*>[\\s\\S]*?<\\/script>/gi, '')\n               .replace(/<style[^>]*>[\\s\\S]*?<\\/style>/gi, '');\n// Remove tags\ntext = text.replace(/<[^>]+>/g, '\\n');\n// Normalize whitespace\ntext = text.replace(/\\s+/g, ' ').trim();\n\nreturn [{ json: { data: text } }];"
+            },
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                440,
+                0
+            ],
+            "id": "f8e7d3a2-435b-4c6c-b99a-958394c155f4",
+            "name": "Code"
+        },
+        {
+            "parameters": {
+                "respondWith": "json",
+                "responseBody": "{ \"content\": \"={{ $json.data }}\" }",
+                "options": {}
+            },
+            "type": "n8n-nodes-base.respondToWebhook",
+            "typeVersion": 1,
+            "position": [
+                660,
+                0
+            ],
+            "id": "e2fe31cd-9154-4a45-906f-c27f1a1bb2ab",
+            "name": "Respond to Webhook"
+        }
+    ],
+    "connections": {
+        "Webhook": {
+            "main": [
+                [
+                    {
+                        "node": "HTTP Request",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "HTTP Request": {
+            "main": [
+                [
+                    {
+                        "node": "Code",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Code": {
+            "main": [
+                [
+                    {
+                        "node": "Respond to Webhook",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}
