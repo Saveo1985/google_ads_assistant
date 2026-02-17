@@ -115,12 +115,20 @@ export async function scrapeWebsite(url: string): Promise<string | null> {
         const data = await response.json();
         console.log("📡 Raw n8n Response:", data); // Debugging
 
-        // Expecting n8n to return { "content": "markdown text..." } or similar
-        // We now also check 'data' because the Code node outputs { data: text }
-        const scrapedText = data.text || data.content || data.output || data.data || "";
+        // Handle both Array (n8n default sometimes) and Object responses
+        let scrapedText = "";
+
+        if (Array.isArray(data) && data.length > 0) {
+            const firstItem = data[0];
+            scrapedText = firstItem.text || firstItem.content || firstItem.output || firstItem.data || "";
+        } else if (typeof data === 'object' && data !== null) {
+            scrapedText = data.text || data.content || data.output || data.data || "";
+        }
+
+        console.log(`📡 Extracted Text Length: ${scrapedText ? scrapedText.length : 0}`);
 
         if (!scrapedText || scrapedText.length < 50) {
-            console.warn("⚠️ n8n returned empty or too short content.");
+            console.warn("⚠️ n8n returned empty or too short content. Check n8n 'Respond to Webhook' node.");
             return null;
         }
 
