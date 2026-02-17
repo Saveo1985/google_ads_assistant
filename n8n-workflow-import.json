@@ -7,7 +7,9 @@
                 "httpMethod": "POST",
                 "path": "scrape",
                 "responseMode": "lastNode",
-                "options": {}
+                "options": {
+                    "allowedOrigins": "*"
+                }
             },
             "type": "n8n-nodes-base.webhook",
             "typeVersion": 1,
