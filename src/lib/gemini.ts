@@ -113,11 +113,11 @@ export async function scrapeWebsite(url: string): Promise<string | null> {
         }
 
         const data = await response.json();
+        console.log("📡 Raw n8n Response:", data); // Debugging
 
         // Expecting n8n to return { "content": "markdown text..." } or similar
-        // Adjust based on your actual n8n output structure. 
-        // Assuming n8n returns a JSON with a 'text' or 'content' field.
-        const scrapedText = data.text || data.content || data.output || "";
+        // We now also check 'data' because the Code node outputs { data: text }
+        const scrapedText = data.text || data.content || data.output || data.data || "";
 
         if (!scrapedText || scrapedText.length < 50) {
             console.warn("⚠️ n8n returned empty or too short content.");
