@@ -56,9 +56,29 @@ export async function getGeminiResponse(
 
     try {
         // 1. Modell Initialisierung (Gemini 3 Flash Preview)
+        const outputRules = `
+####### OUTPUT FORMAT RULES (CRITICAL) #######
+- Für Google Ads Assets (Headlines, Descriptions, Keywords):
+  Nutze für JEDES EINZELNE Element einen separaten Code-Block (Triple-Backticks).
+  NIEMALS mehrere Assets in einen Block schreiben.
+  
+  RICHTIG:
+  Hier sind deine Headlines:
+  \`\`\`Headline 1\`\`\`
+  \`\`\`Headline 2\`\`\`
+  
+  FALSCH:
+  \`\`\`
+  Headline 1
+  Headline 2
+  \`\`\`
+##############################################
+`;
+        const baseInstruction = BRAIN_RULES[role] || BRAIN_RULES.CORE;
+
         const model = genAI.getGenerativeModel({
             model: MODEL_NAME,
-            systemInstruction: BRAIN_RULES[role] || BRAIN_RULES.CORE
+            systemInstruction: baseInstruction + "\n\n" + outputRules
         });
 
         // 2. Prompt Zusammensetzung (Multimodal)
