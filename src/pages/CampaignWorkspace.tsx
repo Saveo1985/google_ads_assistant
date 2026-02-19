@@ -407,9 +407,29 @@ Analysiere Trends in den dailyStats. Achte auf Ausreißer beim CPC oder Conversi
 `;
             }
 
-            // Combine: Client Context + Base Context + Knowledge Base + Cross-Campaign Selection + Live Data
+            // 5. UNIT ECONOMICS CONTEXT
+            let economicsContext = "";
+            if (client?.unitEconomics) {
+                const eco = client.unitEconomics;
+                // Calculate Break Even ROAS if not present (simplified)
+                const margin = eco.margin || (eco.cogs ? 100 - eco.cogs : 50);
+                const breakEvenRoas = eco.breakEvenRoas || (margin > 0 ? 100 / margin : 0);
+
+                economicsContext = `
+### 📊 UNIT ECONOMICS (From ROAS Calculator)
+- Target ROAS: ${eco.targetRoas || 'N/A'}
+- Break-Even ROAS: ${breakEvenRoas.toFixed(2)}
+- Profit Margin: ${margin}%
+- Lead/Sale Value (AOV): ${eco.aov || 'N/A'}€
+- Tax Rate: ${eco.taxRate || 0}%
+
+(INSTRUCTION: Compare the LIVE GOOGLE ADS DATA with these UNIT ECONOMICS. If the Live ROAS is below Break-Even, flag it as a critical issue.)
+`;
+            }
+
+            // Combine: Client Context + Live Data + Economics + Base Context + Knowledge Base + Cross-Campaign Selection
             // SYSTEM: FULL CONTEXT ENFORCED - NO TRUNCATION
-            let combinedContext = `${clientContext}\n${liveContextInjection}\n${baseContext}\n\n${contextString}`;
+            let combinedContext = `${clientContext}\n${liveContextInjection}\n${economicsContext}\n${baseContext}\n\n${contextString}`;
 
             if (performanceReport) {
                 combinedContext += `
@@ -430,50 +450,49 @@ ${performanceReport}
                 // PASS IMAGES TO GEMINI
                 let aiResponse = await getGeminiResponse(fullPrompt, 'ASSISTANT', combinedContext, currentImages.map(img => ({ mimeType: img.mimeType, data: img.data })));
 
-                // --- TASK CREATION INTERCEPTION ---
-                // Pattern: ```json { "action": "create_task", ... } ```
-                const jsonMatch = aiResponse.match(/```json\n([\s\S]*?)\n```/);
+                // --- TASK CREATION INTERCEPTION (REGEX) ---
+                // Pattern: TASK_CREATE: [Title] | [Priority]
+                const taskMatch = aiResponse.match(/TASK_CREATE:\s*(.*?)\s*\|\s*(high|medium|low)/i);
 
-                if (jsonMatch) {
+                if (taskMatch) {
                     try {
-                        const jsonContent = JSON.parse(jsonMatch[1]);
-                        if (jsonContent.action === 'create_task') {
+                        const title = taskMatch[1].trim();
+                        const priority = taskMatch[2].toLowerCase();
 
-                            // 1. Create Task in Firestore
-                            await addDoc(getAppCollection('tasks'), {
-                                task: jsonContent.title, // 'task' field matches Tasks.tsx
-                                description: `Created by AI Assistant. Priority: ${jsonContent.priority}`,
-                                priority: jsonContent.priority,
-                                due_date: jsonContent.dueDate || new Date(Date.now() + 86400000).toISOString(),
-                                status: 'Pending',
-                                clientId: clientId, // Context
-                                campaignId: campaignId, // Context
-                                related_client_id: clientId, // For navigation in Tasks.tsx
-                                related_campaign_id: campaignId,
-                                source: 'assistant_chat',
-                                createdAt: serverTimestamp()
-                            });
+                        // 1. Create Task in Firestore
+                        await addDoc(getAppCollection('tasks'), {
+                            task: title,
+                            description: `Created by AI Assistant. Priority: ${priority}`,
+                            priority: priority,
+                            due_date: new Date(Date.now() + 86400000).toISOString(), // Next day default
+                            status: 'Pending',
+                            clientId: clientId,
+                            campaignId: campaignId,
+                            related_client_id: clientId,
+                            related_campaign_id: campaignId,
+                            source: 'assistant_chat',
+                            createdAt: serverTimestamp()
+                        });
 
-                            // 2. Trigger n8n Webhook (Sync)
-                            // We use a fire-and-forget approach or handled via the hook if we were inside a component, 
-                            // but here we might need to instantiate the hook logic or just call fetch directly if the hook isn't usable inside this async function easily.
-                            // Actually, we can use the hook at the top level and call its function here.
-                            // See 'const { triggerWorkflow } = useN8nTrigger();' added at top of component.
-                            triggerWorkflow(import.meta.env.VITE_N8N_TASK_WEBHOOK || '', {
-                                ...jsonContent,
-                                clientId,
-                                campaignId,
-                                source: 'assistant_chat'
-                            });
+                        // 2. Trigger n8n Webhook
+                        triggerWorkflow(import.meta.env.VITE_N8N_TASK_WEBHOOK || '', {
+                            action: 'create_task',
+                            title,
+                            priority,
+                            clientId,
+                            campaignId,
+                            source: 'assistant_chat'
+                        });
 
-                            // 3. Remove JSON from visible response
-                            aiResponse = aiResponse.replace(jsonMatch[0], '').trim();
-                            aiResponse += `\n\n✅ **Task Created**: ${jsonContent.title}`;
+                        // 3. Remove Command from visible response (Clean UI)
+                        aiResponse = aiResponse.replace(taskMatch[0], '').trim();
 
-                            // toast.success("Task added to your list!"); // Trigger toast if preferred
-                        }
+                        // Add Confirmation to Chat
+                        // aiResponse += `\n\n✅ **Task Created**: ${title}`; 
+                        // toast.success(`Task created: ${title}`); // We can use toast here if imported
+
                     } catch (e) {
-                        console.error("Failed to parse AI Task JSON", e);
+                        console.error("Failed to parse AI Task Regex", e);
                     }
                 }
                 // ----------------------------------

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CheckSquare, Calendar, ArrowRight, Trash2, CheckCircle, Circle, Briefcase } from 'lucide-react';
-import { onSnapshot, query, orderBy, deleteDoc, updateDoc, doc, where } from 'firebase/firestore';
+import { onSnapshot, query, orderBy, deleteDoc, updateDoc } from 'firebase/firestore';
 import { getAppCollection, getAppDoc } from '../lib/db';
 
 export default function Tasks() {
@@ -57,9 +57,24 @@ export default function Tasks() {
         }
     };
 
+    // Filtering State
+    const [filterClient, setFilterClient] = useState<string>('all');
+    const [filterCampaign, setFilterCampaign] = useState<string>('all');
+
+    // Extract Unique Options from Tasks
+    const clients = Array.from(new Set(tasks.map(t => t.clientId).filter(Boolean)));
+    const campaigns = Array.from(new Set(tasks.map(t => t.campaignId).filter(Boolean)));
+
+    // Filter Logic
+    const filteredTasks = tasks.filter(t => {
+        const matchClient = filterClient === 'all' || t.clientId === filterClient;
+        const matchCampaign = filterCampaign === 'all' || t.campaignId === filterCampaign;
+        return matchClient && matchCampaign;
+    });
+
     // Group tasks for UI
-    const pendingTasks = tasks.filter(t => t.status !== 'Completed');
-    const completedTasks = tasks.filter(t => t.status === 'Completed');
+    const pendingTasks = filteredTasks.filter(t => t.status !== 'Completed');
+    const completedTasks = filteredTasks.filter(t => t.status === 'Completed');
 
     return (
         <div className="h-full bg-[#F0F0F3] p-8 -m-8 overflow-y-auto">
@@ -67,6 +82,27 @@ export default function Tasks() {
                 <div>
                     <h1 className="text-3xl font-['Federo'] text-gray-900">Task Manager</h1>
                     <p className="text-gray-500 font-['Barlow']">Track your AI-generated action items</p>
+                </div>
+
+                {/* Filters */}
+                <div className="flex gap-4">
+                    <select
+                        value={filterClient}
+                        onChange={(e) => setFilterClient(e.target.value)}
+                        className="bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm font-['Barlow'] focus:outline-none focus:border-[#B7EF02]"
+                    >
+                        <option value="all">All Clients</option>
+                        {clients.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+
+                    <select
+                        value={filterCampaign}
+                        onChange={(e) => setFilterCampaign(e.target.value)}
+                        className="bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm font-['Barlow'] focus:outline-none focus:border-[#B7EF02]"
+                    >
+                        <option value="all">All Campaigns</option>
+                        {campaigns.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
                 </div>
             </div>
 
@@ -76,7 +112,11 @@ export default function Tasks() {
                 <div className="text-center py-20 bg-white rounded-xl border border-dashed border-gray-300">
                     <CheckSquare className="mx-auto text-gray-300 mb-4" size={48} />
                     <h3 className="text-lg font-medium text-gray-900">No tasks found</h3>
-                    <p className="text-gray-500 mb-4">Ask the Campaign Assistant to create tasks for you.</p>
+                    <p className="text-gray-500 mb-4">
+                        {filterClient !== 'all' || filterCampaign !== 'all'
+                            ? "Try adjusting your filters."
+                            : "Ask the Campaign Assistant to create tasks for you."}
+                    </p>
                 </div>
             ) : (
                 <div className="space-y-8">

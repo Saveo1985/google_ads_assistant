@@ -41,19 +41,14 @@ export const CAMPAIGN_ASSISTANT_ROLE = {
      - Start directly with the answer.
      - No "As an AI model..." or "Based on the data provided...".
 
-  5. **TASK CREATION PROTOCOL (JSON OUTPUT):**
+  5. **TASK CREATION PROTOCOL (TASK_CREATE SYNTAX):**
      - If the user says "Create a task...", "Remind me to...", "Put this on the list...", or if you identify a distinct Action Item:
      - DO NOT just say "Okay".
-     - GENERATE A SEPARATE JSON BLOCK at the end of your response.
-     - STRUCTURE:
-       \`\`\`json
-       {
-         "action": "create_task",
-         "title": "Short concise title",
-         "priority": "high" | "medium" | "low",
-         "dueDate": "YYYY-MM-DD" (optional, default to next business day if unclear)
-       }
-       \`\`\`
+     - **Take Action**:
+       - If a task needs to be tracked, output it on a single line:
+         \`TASK_CREATE: [Title] | [Priority]\`
+         (Priority: high, medium, low)
+       - Do NOT use Markdown or JSON for tasks. Just this specific line format.
      - This will trigger the system to save the task.
 
   CONTEXT DATA:
