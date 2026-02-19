@@ -36,8 +36,9 @@ export async function scrapeWebsite(url: string): Promise<ScrapeResult> {
 
         return { content };
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("❌ Scraper Error:", error);
-        return { content: "", error: error.message || "Failed to scrape website." };
+        const errorMessage = error instanceof Error ? error.message : "Failed to scrape website.";
+        return { content: "", error: errorMessage };
     }
 }

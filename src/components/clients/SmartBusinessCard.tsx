@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Brain, Target, Pencil, X, Check, Loader2, Sparkles } from 'lucide-react';
-import { scrapeWebsite, analyzeBrand } from '../../lib/gemini';
+import { analyzeBrand } from '../../lib/gemini';
+import { scrapeWebsite } from '../../lib/n8n';
 import { toast } from 'react-hot-toast';
 
 interface SmartBusinessCardProps {
@@ -72,15 +73,15 @@ export default function SmartBusinessCard({ clientData, onUpdate }: SmartBusines
             let scrapedContent: string | null = null;
             if (clientData.website) {
                 toast("Analysing website (via n8n)...", { icon: "🌐" });
-                scrapedContent = await scrapeWebsite(clientData.website);
+                const scrapeResult = await scrapeWebsite(clientData.website);
 
-                if (!scrapedContent) {
+                if (scrapeResult.content) {
+                    scrapedContent = scrapeResult.content;
+                }
+
+                if (scrapeResult.error || !scrapedContent) {
                     toast.error("Website konnte nicht gelesen werden. Bitte Daten manuell prüfen.", { duration: 5000 });
-                    // We still allow proceeding, but the AI will know it failed via the "null" scrapedContent
-                    // However, the user request says: "If scrapedContent is null... show a toast". 
-                    // It implies we might stop or proceed. 
-                    // The prompt "analyzeBrand" handles missing scraped data by returning "Scraping Failed" object if no user hint.
-                    // So we can proceed, and the AI will return the "Scraping Failed" JSON.
+                    // Proceeding allows AI to say "Scraping Failed" if needed.
                 }
             }
 

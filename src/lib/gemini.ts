@@ -9,6 +9,27 @@ const genAI = new GoogleGenerativeAI(API_KEY);
 // STRICT: ONLY USE GEMINI 3 (FLASH OR PRO)
 const MODEL_NAME = "gemini-3-flash-preview";
 
+const OUTPUT_FORMAT_INSTRUCTION = `
+####### OUTPUT FORMAT RULES (CRITICAL) #######
+- Für Google Ads Assets (Headlines, Descriptions, Keywords):
+  Nutze für JEDES EINZELNE Element einen separaten Code-Block (Triple-Backticks).
+  NIEMALS mehrere Assets in einen Block schreiben.
+  
+  RICHTIG:
+  Hier sind deine Headlines:
+  \`\`\`Headline 1\`\`\`
+  \`\`\`Headline 2\`\`\`
+  
+  FALSCH:
+  \`\`\`
+  Headline 1
+  Headline 2
+  \`\`\`
+##############################################
+`;
+// ... (rest of file)
+
+
 /**
  * Holt eine Antwort vom Google Ads Expert (RAG Light).
  * Lädt automatisch das Wissen aus Firestore und injiziert es in den Kontext.
@@ -31,7 +52,7 @@ export async function getExpertResponse(prompt: string, userContext: string = ""
         // 3. Call Gemini with EXPERT role
         return await getGeminiResponse(prompt, 'EXPERT', combinedContext);
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Expert Response Failed:", error);
         return "Entschuldigung, ich kann gerade nicht auf mein Experten-Wissen zugreifen. (Fehler: Knowledge Retrieval)";
     }
@@ -55,30 +76,12 @@ export async function getGeminiResponse(
     }
 
     try {
-        // 1. Modell Initialisierung (Gemini 3 Flash Preview)
-        const outputRules = `
-####### OUTPUT FORMAT RULES (CRITICAL) #######
-- Für Google Ads Assets (Headlines, Descriptions, Keywords):
-  Nutze für JEDES EINZELNE Element einen separaten Code-Block (Triple-Backticks).
-  NIEMALS mehrere Assets in einen Block schreiben.
-  
-  RICHTIG:
-  Hier sind deine Headlines:
-  \`\`\`Headline 1\`\`\`
-  \`\`\`Headline 2\`\`\`
-  
-  FALSCH:
-  \`\`\`
-  Headline 1
-  Headline 2
-  \`\`\`
-##############################################
-`;
+        // 1. Modell Initialisierung
         const baseInstruction = BRAIN_RULES[role] || BRAIN_RULES.CORE;
 
         const model = genAI.getGenerativeModel({
             model: MODEL_NAME,
-            systemInstruction: baseInstruction + "\n\n" + outputRules
+            systemInstruction: baseInstruction + "\n\n" + OUTPUT_FORMAT_INSTRUCTION
         });
 
         // 2. Prompt Zusammensetzung (Multimodal)
@@ -110,80 +113,16 @@ ${prompt}
         const response = await result.response;
         return response.text();
 
-    } catch (error: any) {
+    } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : "Unknown error";
         console.error(`❌ Gemini Error (${MODEL_NAME}):`, error);
 
         // Spezifische Fehlerbehandlung für 404/Modell nicht gefunden
-        if (error.message?.includes("404") || error.message?.includes("not found")) {
+        if (errorMessage.includes("404") || errorMessage.includes("not found")) {
             return `Fehler: Das Modell '${MODEL_NAME}' ist nicht erreichbar oder der API-Key hat keinen Zugriff darauf.`;
         }
 
-        return `⚠️ SYSTEM ERROR: ${error.message || "Unbekannter Fehler bei der KI-Verarbeitung."}`;
-    }
-}
-
-/**
- * Attempts to scrape the website content.
- * Note: Client-side scraping is limited by CORS. In a production app, this should call a backend proxy or n8n webhook.
- */
-/**
- * Attempts to scrape the website content via n8n Webhook.
- * This avoids CORS issues and ensures reliable extraction.
- */
-export async function scrapeWebsite(url: string): Promise<string | null> {
-    // STARTUP CHECK: Try both variable names to be safe against Vercel config mismatches
-    const webhookUrl = import.meta.env.VITE_N8N_SCRAPE_URL || import.meta.env.VITE_N8N_SCRAPER_URL;
-
-    if (!webhookUrl) {
-        console.error("⚠️ System Configuration Error: Neither VITE_N8N_SCRAPE_URL nor VITE_N8N_SCRAPER_URL is set in .env");
-        return null;
-    }
-
-    // N8N FIX: Ensure URL has protocol
-    let targetUrl = url.trim();
-    if (!targetUrl.startsWith('http://') && !targetUrl.startsWith('https://')) {
-        targetUrl = 'https://' + targetUrl;
-    }
-
-    try {
-        console.log(`📡 Sending scraping request to n8n for: ${targetUrl}`);
-
-        const response = await fetch(webhookUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ url: targetUrl })
-        });
-
-        if (!response.ok) {
-            throw new Error(`n8n Webhook Error: ${response.statusText}`);
-        }
-
-        const data = await response.json();
-        console.log("📡 Raw n8n Response:", data); // Debugging
-
-        // Handle both Array (n8n default sometimes) and Object responses
-        let scrapedText = "";
-
-        if (Array.isArray(data) && data.length > 0) {
-            const firstItem = data[0];
-            scrapedText = firstItem.text || firstItem.content || firstItem.output || firstItem.data || "";
-        } else if (typeof data === 'object' && data !== null) {
-            scrapedText = data.text || data.content || data.output || data.data || "";
-        }
-
-        console.log(`📡 Extracted Text Length: ${scrapedText ? scrapedText.length : 0}`);
-
-        if (!scrapedText || scrapedText.length < 50) {
-            console.warn("⚠️ n8n returned empty or too short content. Check n8n 'Respond to Webhook' node.");
-            return null;
-        }
-
-        return scrapedText.slice(0, 8000); // Increased context limit for better AI analysis
-    } catch (error) {
-        console.error("❌ Scraping Service Failed:", error);
-        return null;
+        return `⚠️ SYSTEM ERROR: ${errorMessage || "Unbekannter Fehler bei der KI-Verarbeitung."}`;
     }
 }
 
@@ -256,11 +195,11 @@ export async function analyzeBrand(name: string, url: string, scrapedData?: stri
         const responseText = await getGeminiResponse(prompt, 'ASSISTANT', 'Focus on strict factual analysis from provided context.');
         const cleanJson = responseText.replace(/```json|```/g, '').trim();
         return JSON.parse(cleanJson);
-    } catch (error) {
+    } catch (error: unknown) {
         console.error("AI Analysis Failed:", error);
         return {
             industry: "Analysis Error",
-            description: `System fail: ${error.message}`,
+            description: `System fail: ${error instanceof Error ? error.message : "Unknown error"}`,
             key_products: "",
             suggested_strategy: "Try again later."
         };
@@ -294,7 +233,7 @@ export async function refineClientData(currentAnalysis: any, userFeedback: strin
         const responseText = await getGeminiResponse(prompt, 'ASSISTANT', 'Data refinement task.');
         const cleanJson = responseText.replace(/```json|```/g, '').trim();
         return JSON.parse(cleanJson);
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("AI Refinement Failed:", error);
         throw new Error("Could not refine data.");
     }
