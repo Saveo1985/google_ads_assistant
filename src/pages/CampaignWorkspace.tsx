@@ -8,37 +8,11 @@ import { GoogleAdsSyncButton } from '../components/campaigns/GoogleAdsSyncButton
 import { useN8nTrigger } from '../hooks/useN8nTrigger';
 import CampaignMemory from '../components/CampaignMemory';
 import CrossCampaignSelector from '../components/campaigns/CrossCampaignSelector';
+import { FormattedMessage } from '../components/ui/FormattedMessage';
 import type { Campaign, Client, CampaignStats, Message } from '../types';
 
 // --- HELPER COMPONENT: Message Formatter ---
-// Parses **bold** and handles newlines/lists without extra dependencies
-const FormattedMessage = ({ text, isUser }: { text: string, isUser: boolean }) => {
-    if (!text) return null;
-
-    return (
-        <div className="space-y-1 text-sm leading-relaxed">
-            {text.split('\n').map((line, i) => {
-                const trimmed = line.trim();
-                // Identify list items for indentation
-                const isList = /^\d+\.|^[\*-]/.test(trimmed);
-
-                // Parse **Bold** text
-                const parts = line.split(/(\*\*.*?\*\*)/g);
-
-                return (
-                    <div key={i} className={`${isList ? 'pl-4' : ''} min-h-[1.25rem]`}>
-                        {parts.map((part, j) => {
-                            if (part.startsWith('**') && part.endsWith('**')) {
-                                return <strong key={j} className={isUser ? "font-bold text-white" : "font-bold text-gray-900"}>{part.slice(2, -2)}</strong>;
-                            }
-                            return <span key={j}>{part}</span>;
-                        })}
-                    </div>
-                );
-            })}
-        </div>
-    );
-};
+// Removed local implementation in favor of src/components/ui/FormattedMessage.tsx
 
 export default function CampaignWorkspace() {
     const { clientId, campaignId } = useParams();

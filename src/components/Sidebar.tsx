@@ -40,7 +40,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
             <div className={`
                 fixed top-0 left-0 h-screen w-64 bg-[#101010] text-white flex flex-col border-r border-gray-800 z-50 transition-transform duration-300 ease-in-out
                 ${isOpen ? 'translate-x-0' : '-translate-x-full'}
-                md:translate-x-0 md:static
+                md:translate-x-0
             `}>
                 {/* Header */}
                 <div className="p-6 border-b border-gray-800 flex justify-between items-start">
