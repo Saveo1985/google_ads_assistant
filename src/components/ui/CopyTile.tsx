@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Copy, Check } from 'lucide-react';
+import copy from 'copy-to-clipboard';
 
 interface CopyTileProps {
     content: string;
@@ -8,33 +9,11 @@ interface CopyTileProps {
 export const CopyTile: React.FC<CopyTileProps> = ({ content }) => {
     const [copied, setCopied] = useState(false);
 
-    const handleCopy = async () => {
+    const handleCopy = () => {
         try {
-            // Modern async copy
-            if (navigator?.clipboard && navigator.clipboard.writeText) {
-                await navigator.clipboard.writeText(content);
-            } else {
-                // Fallback for non-HTTPS or older environments
-                const textArea = document.createElement("textarea");
-                textArea.value = content;
-
-                // Avoid scrolling to bottom
-                textArea.style.top = "0";
-                textArea.style.left = "0";
-                textArea.style.position = "fixed";
-
-                document.body.appendChild(textArea);
-                textArea.focus();
-                textArea.select();
-
-                try {
-                    document.execCommand('copy');
-                } catch (err) {
-                    console.error('Fallback copy failed', err);
-                }
-
-                document.body.removeChild(textArea);
-            }
+            // copy-to-clipboard automatically handles the fallback logic 
+            // across all browsers including iOS Safari over HTTP
+            copy(content);
 
             setCopied(true);
             setTimeout(() => setCopied(false), 2000);
