@@ -1,6 +1,6 @@
 import React from 'react';
 import { CopyTile } from './CopyTile';
-import { BarChart3, CheckCircle, Lightbulb } from 'lucide-react';
+import { BarChart3, Rocket, Lightbulb } from 'lucide-react';
 
 interface FormattedMessageProps {
     text: string;
@@ -102,22 +102,23 @@ export const FormattedMessage: React.FC<FormattedMessageProps> = ({ text, isUser
                         const actionText = actionMatch ? actionMatch[1].trim() : '';
 
                         return (
-                            <div key={`analysis-${index}-${subIdx}`} className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden my-5 flex flex-col">
+                            <div key={`analysis-${index}-${subIdx}`} className="my-6 space-y-4">
                                 {/* Insight Section */}
-                                <div className="border-l-4 border-[#B7EF02] p-4 flex flex-col gap-2">
-                                    <div className="flex items-center gap-2 text-slate-800 font-['Federo'] font-semibold tracking-wide">
-                                        <Lightbulb size={18} className="text-[#B7EF02]" />
+                                <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex flex-col gap-3 relative overflow-hidden">
+                                    <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#B7EF02]"></div>
+                                    <div className="flex items-center gap-2 text-slate-800 font-['Federo'] font-semibold tracking-wide pl-2">
+                                        <Lightbulb size={20} className="text-[#B7EF02]" />
                                         <span>INSIGHT</span>
                                     </div>
-                                    <div className="text-slate-700">
+                                    <div className="text-slate-700 pl-2">
                                         {renderMarkdownText(insightText, `insight-${index}-${subIdx}`)}
                                     </div>
                                 </div>
 
                                 {/* Data Section */}
-                                <div className="bg-slate-50 p-4 border-t border-slate-100 flex flex-col gap-2">
+                                <div className="bg-slate-50 rounded-xl shadow-sm border border-slate-200 p-5 flex flex-col gap-3">
                                     <div className="flex items-center gap-2 text-slate-800 font-['Federo'] font-semibold tracking-wide">
-                                        <BarChart3 size={18} className="text-slate-500" />
+                                        <BarChart3 size={20} className="text-slate-500" />
                                         <span>DATA</span>
                                     </div>
                                     <div className="text-slate-700">
@@ -126,12 +127,12 @@ export const FormattedMessage: React.FC<FormattedMessageProps> = ({ text, isUser
                                 </div>
 
                                 {/* Action Section */}
-                                <div className="bg-emerald-50/50 p-4 border-t border-emerald-100 flex flex-col gap-2">
-                                    <div className="flex items-center gap-2 text-emerald-800 font-['Federo'] font-semibold tracking-wide">
-                                        <CheckCircle size={18} className="text-emerald-500" />
+                                <div className="bg-emerald-50/50 rounded-xl shadow-sm border border-emerald-200 p-5 flex flex-col gap-3">
+                                    <div className="flex items-center gap-2 text-emerald-800 font-['Federo'] font-bold tracking-wide">
+                                        <Rocket size={20} className="text-emerald-500" />
                                         <span>ACTION</span>
                                     </div>
-                                    <div className="text-emerald-900">
+                                    <div className="text-emerald-900 font-medium">
                                         {renderMarkdownText(actionText, `action-${index}-${subIdx}`)}
                                     </div>
                                 </div>
