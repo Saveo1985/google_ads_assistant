@@ -69,7 +69,7 @@ export const FormattedMessage: React.FC<FormattedMessageProps> = ({ text, isUser
                                     const match = rawText.match(/^([^:]{2,35}):\s*(.+)/);
                                     if (match) {
                                         const possibleLabel = match[1].trim();
-                                        const isMetadataLabel = /headline|titel|desc|beschreibung|sitelink|callout|cta|text|asset/i.test(possibleLabel);
+                                        const isMetadataLabel = /headline|titel|desc|beschreibung|sitelink|callout|cta|text|asset|zusatzinfo|snippet/i.test(possibleLabel);
 
                                         if (isMetadataLabel) {
                                             label = possibleLabel;
